@@ -1,0 +1,24 @@
+# Databricks Asset Bundle for the Stark Overflow fraud detection project.
+# The workspace host comes from your local Databricks CLI profile (never committed).
+# Deploy only after agreeing with the team: deploying can recreate pipelines and jobs.
+
+bundle:
+  name: stark_overflow
+
+include:
+  - resources/jobs/*.yml
+  - resources/pipelines/*.yml
+
+variables:
+  catalog:
+    description: Unity Catalog catalog that holds the curated layers.
+    default: applebees_semantic
+  source_root:
+    description: Volume path with the raw JSONL extracts.
+  warehouse_id:
+    description: SQL warehouse used by SQL tasks, dashboards and Genie.
+
+targets:
+  dev:
+    mode: development
+    default: true
