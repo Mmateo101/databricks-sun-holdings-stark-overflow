@@ -1,0 +1,36 @@
+# This repository is PUBLIC. Never commit data, credentials or workspace identifiers.
+
+# Data and data exports (all business data stays inside Databricks)
+*.csv
+*.tsv
+*.parquet
+*.json.gz
+*.jsonl
+*.xlsx
+*.xls
+data/
+exports/
+reference/
+
+# Credentials and local configuration
+.databrickscfg
+.env
+.env.*
+*.pem
+*.key
+secrets/
+databricks.local.yml
+
+# Databricks bundle state
+.databricks/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
