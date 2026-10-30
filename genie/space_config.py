@@ -3,12 +3,13 @@
 python3 genie/space_config.py validate   -> runs every example and benchmark SQL on the warehouse
 python3 genie/space_config.py json       -> writes genie/serialized_space.json (payload for create-space)
 """
+import os
 import json
 import sys
 import uuid
 from pathlib import Path
 
-C = "applebees_semantic"
+C = os.environ.get("DATABRICKS_CATALOG", "applebees_semantic")
 TITLE = "Applebee's Discount & Fraud Analyst"
 DESCRIPTION = ("Ask about discounts, tips and voids across Sun Holdings Applebee's restaurants: "
                "discount rates, codes, employees, managers and outliers.")

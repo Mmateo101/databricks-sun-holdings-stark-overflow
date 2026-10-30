@@ -1,4 +1,4 @@
--- applebees_semantic.gold.fraud_manager_day: one row per manager, restaurant and business date.
+-- ${catalog}.gold.fraud_manager_day: one row per manager, restaurant and business date.
 -- A manager-day exists when the manager approved at least one discount or one void at that restaurant.
 -- Manager = manager_id on discount_events (approver of a discount) and on silver.voids (approver of a void).
 -- manager_id 0 means "not specified" (automatic loyalty and gift card discounts) and is left out.
@@ -8,7 +8,7 @@
 CREATE OR REPLACE TABLE ${target} AS
 WITH approvals AS (
   SELECT manager_id, location_id, business_date, discount_employee_id, amount
-  FROM applebees_semantic.gold.discount_events
+  FROM ${catalog}.gold.discount_events
   WHERE manager_id IS NOT NULL AND manager_id <> 0
 ),
 appr_day AS (
@@ -28,7 +28,7 @@ top_emp AS (  -- approvals that went to the employee this manager approved most 
 ),
 void_day AS (
   SELECT manager_id, location_id, business_date, count(*) AS approved_voids, sum(amount) AS approved_void_amount
-  FROM applebees_semantic.silver.voids
+  FROM ${catalog}.silver.voids
   WHERE manager_id IS NOT NULL AND manager_id <> 0
   GROUP BY ALL
 ),
@@ -65,4 +65,4 @@ LEFT JOIN appr_day a USING (manager_id, location_id, business_date)
 LEFT JOIN top_emp t USING (manager_id, location_id, business_date)
 LEFT JOIN void_day v USING (manager_id, location_id, business_date)
 LEFT JOIN store_appr s USING (location_id, business_date)
-LEFT JOIN applebees_semantic.gold.location_day ld USING (location_id, business_date);
+LEFT JOIN ${catalog}.gold.location_day ld USING (location_id, business_date);

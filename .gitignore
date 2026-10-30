@@ -34,3 +34,12 @@ __pycache__/
 .DS_Store
 .vscode/
 .idea/
+
+# Local runtime, execution evidence and company-data dashboard exports
+evidence/
+private/
+exports-private/
+*.lvdash-export.json
+verification.json
+bundle-summary.json
+.playwright/

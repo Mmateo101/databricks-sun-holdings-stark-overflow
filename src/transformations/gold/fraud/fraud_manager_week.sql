@@ -1,4 +1,4 @@
--- applebees_semantic.gold.fraud_manager_week: one row per manager, restaurant and week (Thursday to Wednesday,
+-- ${catalog}.gold.fraud_manager_week: one row per manager, restaurant and week (Thursday to Wednesday,
 -- the same weeks as fraud_employee_week). Additive columns are sums of fraud_manager_day; distinct employees,
 -- top-employee approvals and the peer group are recomputed from the events of the whole week; ratios are
 -- recomputed from the weekly numerators and denominators (daily ratios are never averaged).
@@ -22,7 +22,7 @@ sums AS (
 approvals AS (
   SELECT manager_id, location_id, discount_employee_id, amount,
     date_sub(business_date, (dayofweek(business_date) + 2) % 7) AS week_start
-  FROM applebees_semantic.gold.discount_events
+  FROM ${catalog}.gold.discount_events
   WHERE manager_id IS NOT NULL AND manager_id <> 0
 ),
 emp AS (

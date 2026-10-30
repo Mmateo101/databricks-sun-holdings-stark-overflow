@@ -3,53 +3,53 @@
 -- Keys are informational. Metric views read the DAY tables so dashboards can filter by date; the WEEK tables
 -- are the model inputs and Genie reads them directly for exact weekly values.
 
-ALTER TABLE applebees_semantic.gold.fraud_employee_day ALTER COLUMN business_date SET NOT NULL;
-ALTER TABLE applebees_semantic.gold.fraud_employee_day ALTER COLUMN employee_id SET NOT NULL;
-ALTER TABLE applebees_semantic.gold.fraud_employee_day ADD CONSTRAINT fraud_employee_day_pk PRIMARY KEY (business_date, employee_id);
-ALTER TABLE applebees_semantic.gold.fraud_employee_day ADD CONSTRAINT fraud_employee_day_employee_fk FOREIGN KEY (employee_id) REFERENCES applebees_semantic.silver.employees;
-ALTER TABLE applebees_semantic.gold.fraud_employee_day ADD CONSTRAINT fraud_employee_day_location_fk FOREIGN KEY (location_id) REFERENCES applebees_semantic.silver.locations;
+ALTER TABLE ${catalog}.gold.fraud_employee_day ALTER COLUMN business_date SET NOT NULL;
+ALTER TABLE ${catalog}.gold.fraud_employee_day ALTER COLUMN employee_id SET NOT NULL;
+ALTER TABLE ${catalog}.gold.fraud_employee_day ADD CONSTRAINT fraud_employee_day_pk PRIMARY KEY (business_date, employee_id);
+ALTER TABLE ${catalog}.gold.fraud_employee_day ADD CONSTRAINT fraud_employee_day_employee_fk FOREIGN KEY (employee_id) REFERENCES ${catalog}.silver.employees;
+ALTER TABLE ${catalog}.gold.fraud_employee_day ADD CONSTRAINT fraud_employee_day_location_fk FOREIGN KEY (location_id) REFERENCES ${catalog}.silver.locations;
 
-ALTER TABLE applebees_semantic.gold.fraud_employee_week ALTER COLUMN week_start SET NOT NULL;
-ALTER TABLE applebees_semantic.gold.fraud_employee_week ALTER COLUMN employee_id SET NOT NULL;
-ALTER TABLE applebees_semantic.gold.fraud_employee_week ADD CONSTRAINT fraud_employee_week_pk PRIMARY KEY (week_start, employee_id);
-ALTER TABLE applebees_semantic.gold.fraud_employee_week ADD CONSTRAINT fraud_employee_week_employee_fk FOREIGN KEY (employee_id) REFERENCES applebees_semantic.silver.employees;
-ALTER TABLE applebees_semantic.gold.fraud_employee_week ADD CONSTRAINT fraud_employee_week_location_fk FOREIGN KEY (location_id) REFERENCES applebees_semantic.silver.locations;
+ALTER TABLE ${catalog}.gold.fraud_employee_week ALTER COLUMN week_start SET NOT NULL;
+ALTER TABLE ${catalog}.gold.fraud_employee_week ALTER COLUMN employee_id SET NOT NULL;
+ALTER TABLE ${catalog}.gold.fraud_employee_week ADD CONSTRAINT fraud_employee_week_pk PRIMARY KEY (week_start, employee_id);
+ALTER TABLE ${catalog}.gold.fraud_employee_week ADD CONSTRAINT fraud_employee_week_employee_fk FOREIGN KEY (employee_id) REFERENCES ${catalog}.silver.employees;
+ALTER TABLE ${catalog}.gold.fraud_employee_week ADD CONSTRAINT fraud_employee_week_location_fk FOREIGN KEY (location_id) REFERENCES ${catalog}.silver.locations;
 
-ALTER TABLE applebees_semantic.gold.fraud_manager_day ALTER COLUMN business_date SET NOT NULL;
-ALTER TABLE applebees_semantic.gold.fraud_manager_day ALTER COLUMN manager_id SET NOT NULL;
-ALTER TABLE applebees_semantic.gold.fraud_manager_day ALTER COLUMN location_id SET NOT NULL;
-ALTER TABLE applebees_semantic.gold.fraud_manager_day ADD CONSTRAINT fraud_manager_day_pk PRIMARY KEY (business_date, manager_id, location_id);
-ALTER TABLE applebees_semantic.gold.fraud_manager_day ADD CONSTRAINT fraud_manager_day_manager_fk FOREIGN KEY (manager_id) REFERENCES applebees_semantic.silver.employees;
-ALTER TABLE applebees_semantic.gold.fraud_manager_day ADD CONSTRAINT fraud_manager_day_location_fk FOREIGN KEY (location_id) REFERENCES applebees_semantic.silver.locations;
+ALTER TABLE ${catalog}.gold.fraud_manager_day ALTER COLUMN business_date SET NOT NULL;
+ALTER TABLE ${catalog}.gold.fraud_manager_day ALTER COLUMN manager_id SET NOT NULL;
+ALTER TABLE ${catalog}.gold.fraud_manager_day ALTER COLUMN location_id SET NOT NULL;
+ALTER TABLE ${catalog}.gold.fraud_manager_day ADD CONSTRAINT fraud_manager_day_pk PRIMARY KEY (business_date, manager_id, location_id);
+ALTER TABLE ${catalog}.gold.fraud_manager_day ADD CONSTRAINT fraud_manager_day_manager_fk FOREIGN KEY (manager_id) REFERENCES ${catalog}.silver.employees;
+ALTER TABLE ${catalog}.gold.fraud_manager_day ADD CONSTRAINT fraud_manager_day_location_fk FOREIGN KEY (location_id) REFERENCES ${catalog}.silver.locations;
 
-ALTER TABLE applebees_semantic.gold.fraud_manager_week ALTER COLUMN week_start SET NOT NULL;
-ALTER TABLE applebees_semantic.gold.fraud_manager_week ALTER COLUMN manager_id SET NOT NULL;
-ALTER TABLE applebees_semantic.gold.fraud_manager_week ALTER COLUMN location_id SET NOT NULL;
-ALTER TABLE applebees_semantic.gold.fraud_manager_week ADD CONSTRAINT fraud_manager_week_pk PRIMARY KEY (week_start, manager_id, location_id);
-ALTER TABLE applebees_semantic.gold.fraud_manager_week ADD CONSTRAINT fraud_manager_week_manager_fk FOREIGN KEY (manager_id) REFERENCES applebees_semantic.silver.employees;
-ALTER TABLE applebees_semantic.gold.fraud_manager_week ADD CONSTRAINT fraud_manager_week_location_fk FOREIGN KEY (location_id) REFERENCES applebees_semantic.silver.locations;
+ALTER TABLE ${catalog}.gold.fraud_manager_week ALTER COLUMN week_start SET NOT NULL;
+ALTER TABLE ${catalog}.gold.fraud_manager_week ALTER COLUMN manager_id SET NOT NULL;
+ALTER TABLE ${catalog}.gold.fraud_manager_week ALTER COLUMN location_id SET NOT NULL;
+ALTER TABLE ${catalog}.gold.fraud_manager_week ADD CONSTRAINT fraud_manager_week_pk PRIMARY KEY (week_start, manager_id, location_id);
+ALTER TABLE ${catalog}.gold.fraud_manager_week ADD CONSTRAINT fraud_manager_week_manager_fk FOREIGN KEY (manager_id) REFERENCES ${catalog}.silver.employees;
+ALTER TABLE ${catalog}.gold.fraud_manager_week ADD CONSTRAINT fraud_manager_week_location_fk FOREIGN KEY (location_id) REFERENCES ${catalog}.silver.locations;
 
-ALTER TABLE applebees_semantic.gold.fraud_employee_day SET TAGS ('layer' = 'gold', 'table_role' = 'fraud_indicators', 'grain' = 'employee_day', 'contains_pii' = 'false');
-ALTER TABLE applebees_semantic.gold.fraud_employee_week SET TAGS ('layer' = 'gold', 'table_role' = 'fraud_indicators', 'grain' = 'employee_week', 'week' = 'thursday_to_wednesday', 'use' = 'model_input');
-ALTER TABLE applebees_semantic.gold.fraud_manager_day SET TAGS ('layer' = 'gold', 'table_role' = 'fraud_indicators', 'grain' = 'manager_location_day');
-ALTER TABLE applebees_semantic.gold.fraud_manager_week SET TAGS ('layer' = 'gold', 'table_role' = 'fraud_indicators', 'grain' = 'manager_location_week', 'week' = 'thursday_to_wednesday', 'use' = 'model_input');
+ALTER TABLE ${catalog}.gold.fraud_employee_day SET TAGS ('layer' = 'gold', 'table_role' = 'fraud_indicators', 'grain' = 'employee_day', 'contains_pii' = 'false');
+ALTER TABLE ${catalog}.gold.fraud_employee_week SET TAGS ('layer' = 'gold', 'table_role' = 'fraud_indicators', 'grain' = 'employee_week', 'week' = 'thursday_to_wednesday', 'use' = 'model_input');
+ALTER TABLE ${catalog}.gold.fraud_manager_day SET TAGS ('layer' = 'gold', 'table_role' = 'fraud_indicators', 'grain' = 'manager_location_day');
+ALTER TABLE ${catalog}.gold.fraud_manager_week SET TAGS ('layer' = 'gold', 'table_role' = 'fraud_indicators', 'grain' = 'manager_location_week', 'week' = 'thursday_to_wednesday', 'use' = 'model_input');
 
-CREATE OR REPLACE VIEW applebees_semantic.semantic.mv_fraud_employee
+CREATE OR REPLACE VIEW ${catalog}.semantic.mv_fraud_employee
 WITH METRICS
 LANGUAGE YAML
 COMMENT 'Employee fraud indicators from gold.fraud_employee_day, sliceable by employee, restaurant, day and fraud week. Each check belongs to the employee who took its first payment. Ratios are recomputed from summed numerators and denominators. For exact weekly values per employee (model input) use gold.fraud_employee_week.'
 AS $$
 version: 1.1
-source: applebees_semantic.gold.fraud_employee_day
+source: ${catalog}.gold.fraud_employee_day
 joins:
   - name: emp
-    source: applebees_semantic.semantic.dim_employee
+    source: ${catalog}.semantic.dim_employee
     on: source.employee_id = emp.employee_id
   - name: loc
-    source: applebees_semantic.semantic.dim_location
+    source: ${catalog}.semantic.dim_location
     on: source.location_id = loc.location_id
   - name: cal
-    source: applebees_semantic.semantic.dim_date
+    source: ${catalog}.semantic.dim_date
     on: source.business_date = cal.business_date
 dimensions:
   - name: employee_name
@@ -178,22 +178,22 @@ measures:
       currency_code: USD
 $$;
 
-CREATE OR REPLACE VIEW applebees_semantic.semantic.mv_fraud_manager
+CREATE OR REPLACE VIEW ${catalog}.semantic.mv_fraud_manager
 WITH METRICS
 LANGUAGE YAML
 COMMENT 'Manager fraud indicators from gold.fraud_manager_day, sliceable by manager, restaurant, day and fraud week. Group by manager: store_sales repeats for every manager of a store, so these measures do not describe a whole store (use mv_sales_discounts for that). Concentration and peer comparison are approval-weighted daily values; for exact weekly values (model input) use gold.fraud_manager_week.'
 AS $$
 version: 1.1
-source: applebees_semantic.gold.fraud_manager_day
+source: ${catalog}.gold.fraud_manager_day
 joins:
   - name: mgr
-    source: applebees_semantic.semantic.dim_employee
+    source: ${catalog}.semantic.dim_employee
     on: source.manager_id = mgr.employee_id
   - name: loc
-    source: applebees_semantic.semantic.dim_location
+    source: ${catalog}.semantic.dim_location
     on: source.location_id = loc.location_id
   - name: cal
-    source: applebees_semantic.semantic.dim_date
+    source: ${catalog}.semantic.dim_date
     on: source.business_date = cal.business_date
 dimensions:
   - name: manager_name
@@ -285,5 +285,5 @@ measures:
     synonyms: [comparacion con pares]
 $$;
 
-ALTER VIEW applebees_semantic.semantic.mv_fraud_employee SET TAGS ('layer' = 'semantic', 'table_role' = 'metric_view');
-ALTER VIEW applebees_semantic.semantic.mv_fraud_manager SET TAGS ('layer' = 'semantic', 'table_role' = 'metric_view');
+ALTER VIEW ${catalog}.semantic.mv_fraud_employee SET TAGS ('layer' = 'semantic', 'table_role' = 'metric_view');
+ALTER VIEW ${catalog}.semantic.mv_fraud_manager SET TAGS ('layer' = 'semantic', 'table_role' = 'metric_view');

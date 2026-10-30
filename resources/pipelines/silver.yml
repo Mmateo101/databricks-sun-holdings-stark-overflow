@@ -1,0 +1,16 @@
+resources:
+  pipelines:
+    silver:
+      name: Stark Overflow accepted POS Silver
+      catalog: ${var.source_catalog}
+      schema: ${var.silver_schema}
+      serverless: true
+      continuous: false
+      root_path: ../../src
+      configuration:
+        source_root: ${var.source_root}
+        spark.sql.session.timeZone: UTC
+        spark.sql.ansi.enabled: "true"
+      libraries:
+        - glob:
+            include: ../../src/transformations/silver/**

@@ -2,7 +2,7 @@
 python3 fraud/build_comments.py"""
 from pathlib import Path
 
-G = "applebees_semantic.gold"
+G = "${catalog}.gold"
 OWN = "The employee who took the first payment of the check owns it (min_by(employee_id, payment_ordinal), 'GC Sold' excluded)."
 
 EMPLOYEE = {

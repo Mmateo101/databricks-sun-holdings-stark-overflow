@@ -17,6 +17,33 @@ variables:
     description: Volume path with the raw JSONL extracts.
   warehouse_id:
     description: SQL warehouse used by SQL tasks, dashboards and Genie.
+    default: ""
+  source_catalog:
+    description: Catalog for the isolated Silver pipeline outputs.
+    default: workspace
+  silver_schema:
+    description: Dedicated Silver schema, not an existing shared schema.
+    default: stark_silver_${workspace.current_user.short_name}
+  gold_schema:
+    description: Prefix for isolated per-run Gold schemas.
+    default: stark_gold
+  model_schema:
+    description: Dedicated owned model and review output schema.
+    default: stark_model_${workspace.current_user.short_name}
+  review_model_run_id:
+    description: Completed model Job run to review; set before running the review Job.
+    default: ""
+
+sync:
+  include:
+    - src/**
+    - notebooks/**
+    - config/**
+    - requirements.txt
+  exclude:
+    - .venv/**
+    - evidence/**
+    - private/**
 
 targets:
   dev:
