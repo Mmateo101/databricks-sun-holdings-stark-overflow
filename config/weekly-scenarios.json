@@ -1,0 +1,52 @@
+{
+  "model_version": "weekly-policy-assumption-sensitivity-v1",
+  "status": "assumption_sensitivity_only",
+  "training_full_weeks": 4,
+  "weekly_base_rates": [
+    0.01,
+    0.05,
+    0.1
+  ],
+  "memory_half_lives_weeks": [
+    0,
+    1,
+    4
+  ],
+  "activity_odds_multipliers": [
+    0.5,
+    1,
+    2,
+    4
+  ],
+  "concentration_multipliers": [
+    0.5,
+    1,
+    2
+  ],
+  "reference": {
+    "weekly_base_rate": 0.05,
+    "memory_half_life_weeks": 1,
+    "activity_odds_multiplier": 2,
+    "concentration_multiplier": 1
+  },
+  "provenance": "Declared illustrative stress settings; not elicited or empirically calibrated violation parameters.",
+  "target": "At least one applicable policy violation, including a mistake, by the recorded discount actor in the recorded employee-location-week population.",
+  "baseline_assumption": "Unlabeled location activity fitted on earlier complete weeks is used as a proxy for the no-violation observation distribution. Contamination, role, channel and promotion differences remain possible.",
+  "grid_interpretation": "Unweighted sensitivity envelope. No scenario posterior weights; min/max/variance are not a credible interval or posterior parameter variance.",
+  "observation": "One discount-activity count block only. Tips, amount, normalized ratios and candidate policy passes are not multiplied as independent evidence.",
+  "fit": {
+    "logit_mean_bounds": [
+      -9,
+      9
+    ],
+    "log_concentration_bounds": [
+      -2.302585092994046,
+      9.210340371976184
+    ],
+    "initial_concentrations": [
+      2,
+      20,
+      200
+    ]
+  }
+}

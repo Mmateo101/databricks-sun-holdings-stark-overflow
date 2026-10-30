@@ -1,0 +1,65 @@
+resources:
+  jobs:
+    weekly_model:
+      name: Stark Overflow weekly policy review model
+      max_concurrent_runs: 1
+      description: Isolated Silver/Gold preparation and assumption-based weekly scoring. No schedule or calibrated fraud claim.
+      environments:
+        - environment_key: numerical
+          spec:
+            environment_version: "4"
+            dependencies:
+              - numpy>=1.26,<3
+              - scipy>=1.11,<2
+      tasks:
+        - task_key: refresh_silver
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.silver.id}
+        - task_key: build_gold
+          depends_on:
+            - task_key: refresh_silver
+          environment_key: numerical
+          timeout_seconds: 3600
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../../notebooks/build_gold.py
+            base_parameters:
+              repo_root: ${workspace.file_path}
+              catalog: ${var.catalog}
+              source_catalog: ${var.source_catalog}
+              silver_schema: ${var.silver_schema}
+              gold_schema: ${var.gold_schema}
+              expected_owner: ${workspace.current_user.userName}
+              model_run_id: "{{job.run_id}}"
+        - task_key: prepare_actors
+          depends_on:
+            - task_key: build_gold
+          environment_key: numerical
+          timeout_seconds: 1800
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../../notebooks/prepare_actors.py
+            base_parameters:
+              repo_root: ${workspace.file_path}
+              catalog: ${var.catalog}
+              model_schema: ${var.model_schema}
+              expected_owner: ${workspace.current_user.userName}
+              model_run_id: "{{job.run_id}}"
+              facts_table: "{{tasks.build_gold.values.facts_table}}"
+              events_table: "{{tasks.build_gold.values.events_table}}"
+              payments_table: "{{tasks.build_gold.values.payments_table}}"
+        - task_key: score_weeks
+          depends_on:
+            - task_key: prepare_actors
+          environment_key: numerical
+          timeout_seconds: 1800
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../../notebooks/score_weeks.py
+            base_parameters:
+              repo_root: ${workspace.file_path}
+              catalog: ${var.catalog}
+              model_schema: ${var.model_schema}
+              expected_owner: ${workspace.current_user.userName}
+              model_run_id: "{{job.run_id}}"
+              actor_run_id: "{{job.run_id}}"

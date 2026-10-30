@@ -1,7 +1,7 @@
 -- Semantic layer, part 1: clean dimensions and fact views that Genie and the metric views read.
 -- Views only (no data copied). Employee and manager ID 0 means "not specified" in the POS.
 
-CREATE OR REPLACE VIEW applebees_semantic.semantic.dim_location (
+CREATE OR REPLACE VIEW ${catalog}.semantic.dim_location (
   location_id COMMENT 'Restaurant ID. Primary key.',
   location_name COMMENT 'Restaurant name, usually the city or area. Use it to answer questions by store or restaurant.',
   open_date COMMENT 'Date the restaurant opened.',
@@ -11,11 +11,11 @@ CREATE OR REPLACE VIEW applebees_semantic.semantic.dim_location (
   time_zone COMMENT 'IANA time zone of the restaurant.'
 ) COMMENT 'Restaurants (stores), with a flag for those with activity in the study period. Synonyms: store, restaurant, location, branch, sucursal.'
 AS SELECT l.location_id, l.location_name, l.open_date, l.closed_date, l.closed_date IS NULL,
-  EXISTS (SELECT 1 FROM applebees_semantic.gold.location_day d WHERE d.location_id = l.location_id),
+  EXISTS (SELECT 1 FROM ${catalog}.gold.location_day d WHERE d.location_id = l.location_id),
   l.time_zone
-FROM applebees_semantic.silver.locations l;
+FROM ${catalog}.silver.locations l;
 
-CREATE OR REPLACE VIEW applebees_semantic.semantic.dim_revenue_center (
+CREATE OR REPLACE VIEW ${catalog}.semantic.dim_revenue_center (
   revenue_center_id COMMENT 'Sales channel ID. Primary key.',
   revenue_center_name COMMENT 'Sales channel name: In-Store, To Go, Online, Catering, or a delivery partner (Door Dash, Uber Eats, GRUBHUB, Amazon and others).',
   channel_group COMMENT 'Channel grouped in three: Dine-in (In-Store), Off-premise (To Go, Online, Catering, Olo) or Delivery partner (third-party delivery apps).'
@@ -24,9 +24,9 @@ AS SELECT revenue_center_id, revenue_center_name,
   CASE WHEN revenue_center_name = 'In-Store' THEN 'Dine-in'
     WHEN revenue_center_name IN ('To Go', 'Online', 'Online AS', 'Catering') OR revenue_center_name LIKE 'Olo%' THEN 'Off-premise'
     ELSE 'Delivery partner' END
-FROM applebees_semantic.silver.revenue_centers;
+FROM ${catalog}.silver.revenue_centers;
 
-CREATE OR REPLACE VIEW applebees_semantic.semantic.dim_employee (
+CREATE OR REPLACE VIEW ${catalog}.semantic.dim_employee (
   employee_id COMMENT 'Employee ID. Primary key. ID 0 means not specified.',
   employee_name COMMENT 'Employee name. Personal data: show it only when the question is about specific people (for example a watchlist).',
   location_id COMMENT 'Restaurant of the employee record.',
@@ -35,10 +35,10 @@ CREATE OR REPLACE VIEW applebees_semantic.semantic.dim_employee (
   is_borrowed COMMENT 'True when the employee is borrowed from another restaurant.'
 ) COMMENT 'Employees, including managers. The same table plays three roles: the server who rang a line, the employee who applied a discount, and the manager who approved a discount or void. Synonyms: staff, server, employee, empleado.'
 AS SELECT e.employee_id, e.employee_name, e.location_id, l.location_name, e.primary_job_id, e.is_borrowed
-FROM applebees_semantic.silver.employees e
-LEFT JOIN applebees_semantic.silver.locations l ON l.location_id = e.location_id;
+FROM ${catalog}.silver.employees e
+LEFT JOIN ${catalog}.silver.locations l ON l.location_id = e.location_id;
 
-CREATE OR REPLACE VIEW applebees_semantic.semantic.dim_discount (
+CREATE OR REPLACE VIEW ${catalog}.semantic.dim_discount (
   discount_id COMMENT 'Discount code ID. Primary key.',
   discount_name COMMENT 'Discount code as written in the POS.',
   discount_level COMMENT 'Where the code is applied: item (one line) or check (whole bill). Each code is used at one level only.',
@@ -59,10 +59,10 @@ AS SELECT t.discount_id, t.discount_name, d.discount_level, d.web_meaning,
     ELSE 'Not found online' END,
   d.research_status, d.program_scope, d.eligibility_documented, d.minimum_spend_documented,
   d.days_of_week_documented, d.hours_documented, d.channel_documented, d.presence_pattern
-FROM applebees_semantic.silver.discount_types t
-LEFT JOIN applebees_semantic.reference.discount_dictionary d ON d.discount_id = t.discount_id;
+FROM ${catalog}.silver.discount_types t
+LEFT JOIN ${catalog}.reference.discount_dictionary d ON d.discount_id = t.discount_id;
 
-CREATE OR REPLACE VIEW applebees_semantic.semantic.dim_date (
+CREATE OR REPLACE VIEW ${catalog}.semantic.dim_date (
   business_date COMMENT 'Business date. Primary key.',
   weekday_name COMMENT 'Day of the week name (Monday to Sunday).',
   weekday_number COMMENT 'Day of the week number, 1 = Monday to 7 = Sunday.',
@@ -77,11 +77,11 @@ AS SELECT d, date_format(d, 'EEEE'), weekday(d) + 1,
   dayofweek(d) IN (1, 6, 7), date_trunc('WEEK', d)::DATE, date_trunc('MONTH', d)::DATE, date_format(d, 'MMMM'),
   date_sub(d, (dayofweek(d) + 2) % 7),
   date_sub(d, (dayofweek(d) + 2) % 7) < min(d) OVER () OR date_add(date_sub(d, (dayofweek(d) + 2) % 7), 6) > max(d) OVER ()
-FROM (SELECT explode(sequence(min(business_date), max(business_date))) AS d FROM applebees_semantic.gold.location_day);
+FROM (SELECT explode(sequence(min(business_date), max(business_date))) AS d FROM ${catalog}.gold.location_day);
 
 -- Fact views: gold facts plus the few silver columns the metric views need.
 
-CREATE OR REPLACE VIEW applebees_semantic.semantic.fct_check (
+CREATE OR REPLACE VIEW ${catalog}.semantic.fct_check (
   location_id COMMENT 'Restaurant ID.',
   business_date COMMENT 'Business date.',
   check_id COMMENT 'POS check number (unique with location_id and business_date).',
@@ -111,12 +111,12 @@ AS SELECT f.location_id, f.business_date, f.check_id, c.revenue_center_id, hour(
   f.has_positive_discount, f.rate_eligible, f.rate_exclusion_reason, f.rate_gross_component,
   f.rate_discount_component, f.eligible_positive_amount, f.item_discount_known_subtotal,
   f.check_discount_known_subtotal, f.application_count
-FROM applebees_semantic.gold.check_facts f
-JOIN applebees_semantic.silver.checks c USING (location_id, business_date, check_id);
+FROM ${catalog}.gold.check_facts f
+JOIN ${catalog}.silver.checks c USING (location_id, business_date, check_id);
 
-ALTER VIEW applebees_semantic.semantic.dim_location SET TAGS ('layer' = 'semantic', 'table_role' = 'dimension');
-ALTER VIEW applebees_semantic.semantic.dim_revenue_center SET TAGS ('layer' = 'semantic', 'table_role' = 'dimension');
-ALTER VIEW applebees_semantic.semantic.dim_employee SET TAGS ('layer' = 'semantic', 'table_role' = 'dimension', 'contains_pii' = 'true');
-ALTER VIEW applebees_semantic.semantic.dim_discount SET TAGS ('layer' = 'semantic', 'table_role' = 'dimension');
-ALTER VIEW applebees_semantic.semantic.dim_date SET TAGS ('layer' = 'semantic', 'table_role' = 'dimension');
-ALTER VIEW applebees_semantic.semantic.fct_check SET TAGS ('layer' = 'semantic', 'table_role' = 'fact', 'grain' = 'check');
+ALTER VIEW ${catalog}.semantic.dim_location SET TAGS ('layer' = 'semantic', 'table_role' = 'dimension');
+ALTER VIEW ${catalog}.semantic.dim_revenue_center SET TAGS ('layer' = 'semantic', 'table_role' = 'dimension');
+ALTER VIEW ${catalog}.semantic.dim_employee SET TAGS ('layer' = 'semantic', 'table_role' = 'dimension', 'contains_pii' = 'true');
+ALTER VIEW ${catalog}.semantic.dim_discount SET TAGS ('layer' = 'semantic', 'table_role' = 'dimension');
+ALTER VIEW ${catalog}.semantic.dim_date SET TAGS ('layer' = 'semantic', 'table_role' = 'dimension');
+ALTER VIEW ${catalog}.semantic.fct_check SET TAGS ('layer' = 'semantic', 'table_role' = 'fact', 'grain' = 'check');

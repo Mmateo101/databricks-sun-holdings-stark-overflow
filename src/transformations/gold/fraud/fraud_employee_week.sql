@@ -1,4 +1,4 @@
--- applebees_semantic.gold.fraud_employee_week: one row per employee and week (Thursday to Wednesday).
+-- ${catalog}.gold.fraud_employee_week: one row per employee and week (Thursday to Wednesday).
 -- Indicators 1-3 designed by Mateo; indicators 4-8 added by Miguel.
 -- Sums every count and money column of the day table, then recomputes the ratios from those sums
 -- (daily ratios are never averaged). location_id = location with the most sales that week.

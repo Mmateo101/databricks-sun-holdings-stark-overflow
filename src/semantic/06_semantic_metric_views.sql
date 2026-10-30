@@ -1,24 +1,24 @@
 -- Semantic layer, part 3: Unity Catalog metric views. Each one fixes the official definition of the measures
 -- so Genie, dashboards and SQL compute them the same way. Query with MEASURE():
---   SELECT location_name, MEASURE(discount_rate) FROM applebees_semantic.semantic.mv_sales_discounts GROUP BY ALL
+--   SELECT location_name, MEASURE(discount_rate) FROM ${catalog}.semantic.mv_sales_discounts GROUP BY ALL
 -- YAML spec version 1.1 (comments, display names and synonyms per field).
 
-CREATE OR REPLACE VIEW applebees_semantic.semantic.mv_sales_discounts
+CREATE OR REPLACE VIEW ${catalog}.semantic.mv_sales_discounts
 WITH METRICS
 LANGUAGE YAML
 COMMENT 'Official sales and discount metrics (gold-metrics-v1) per check, sliceable by restaurant, date, channel and daypart. Use it for discount rate, gross sales, discounted check frequency and average discount questions.'
 AS $$
 version: 1.1
-source: applebees_semantic.semantic.fct_check
+source: ${catalog}.semantic.fct_check
 joins:
   - name: loc
-    source: applebees_semantic.semantic.dim_location
+    source: ${catalog}.semantic.dim_location
     on: source.location_id = loc.location_id
   - name: cal
-    source: applebees_semantic.semantic.dim_date
+    source: ${catalog}.semantic.dim_date
     on: source.business_date = cal.business_date
   - name: rc
-    source: applebees_semantic.semantic.dim_revenue_center
+    source: ${catalog}.semantic.dim_revenue_center
     on: source.revenue_center_id = rc.revenue_center_id
 dimensions:
   - name: location_name
@@ -141,28 +141,28 @@ measures:
       currency_code: USD
 $$;
 
-CREATE OR REPLACE VIEW applebees_semantic.semantic.mv_discount_usage
+CREATE OR REPLACE VIEW ${catalog}.semantic.mv_discount_usage
 WITH METRICS
 LANGUAGE YAML
 COMMENT 'Discount applications by code, employee who applied them, approving manager, restaurant and date. Use it for who discounts, which codes, self-approvals and missing approvals.'
 AS $$
 version: 1.1
-source: applebees_semantic.gold.discount_events
+source: ${catalog}.gold.discount_events
 joins:
   - name: dsc
-    source: applebees_semantic.semantic.dim_discount
+    source: ${catalog}.semantic.dim_discount
     on: source.discount_id = dsc.discount_id
   - name: emp
-    source: applebees_semantic.semantic.dim_employee
+    source: ${catalog}.semantic.dim_employee
     on: source.discount_employee_id = emp.employee_id
   - name: mgr
-    source: applebees_semantic.semantic.dim_employee
+    source: ${catalog}.semantic.dim_employee
     on: source.manager_id = mgr.employee_id
   - name: loc
-    source: applebees_semantic.semantic.dim_location
+    source: ${catalog}.semantic.dim_location
     on: source.location_id = loc.location_id
   - name: cal
-    source: applebees_semantic.semantic.dim_date
+    source: ${catalog}.semantic.dim_date
     on: source.business_date = cal.business_date
 dimensions:
   - name: discount_name
@@ -281,23 +281,23 @@ measures:
     synonyms: [missing approval, sin gerente]
 $$;
 
-CREATE OR REPLACE VIEW applebees_semantic.semantic.mv_card_tips
+CREATE OR REPLACE VIEW ${catalog}.semantic.mv_card_tips
 WITH METRICS
 LANGUAGE YAML
 COMMENT 'Tips on credit card payments by employee, restaurant and date. Cash tips are not recorded, so only card payments are included.'
 AS $$
 version: 1.1
-source: applebees_semantic.silver.payments
+source: ${catalog}.silver.payments
 filter: is_credit_card
 joins:
   - name: emp
-    source: applebees_semantic.semantic.dim_employee
+    source: ${catalog}.semantic.dim_employee
     on: source.employee_id = emp.employee_id
   - name: loc
-    source: applebees_semantic.semantic.dim_location
+    source: ${catalog}.semantic.dim_location
     on: source.location_id = loc.location_id
   - name: cal
-    source: applebees_semantic.semantic.dim_date
+    source: ${catalog}.semantic.dim_date
     on: source.business_date = cal.business_date
 dimensions:
   - name: employee_name
@@ -359,25 +359,25 @@ measures:
       type: percentage
 $$;
 
-CREATE OR REPLACE VIEW applebees_semantic.semantic.mv_voids
+CREATE OR REPLACE VIEW ${catalog}.semantic.mv_voids
 WITH METRICS
 LANGUAGE YAML
 COMMENT 'Voided items (removed from a check after being ordered) by reason, employee, approving manager, item, restaurant and date.'
 AS $$
 version: 1.1
-source: applebees_semantic.silver.voids
+source: ${catalog}.silver.voids
 joins:
   - name: emp
-    source: applebees_semantic.semantic.dim_employee
+    source: ${catalog}.semantic.dim_employee
     on: source.employee_id = emp.employee_id
   - name: mgr
-    source: applebees_semantic.semantic.dim_employee
+    source: ${catalog}.semantic.dim_employee
     on: source.manager_id = mgr.employee_id
   - name: loc
-    source: applebees_semantic.semantic.dim_location
+    source: ${catalog}.semantic.dim_location
     on: source.location_id = loc.location_id
   - name: cal
-    source: applebees_semantic.semantic.dim_date
+    source: ${catalog}.semantic.dim_date
     on: source.business_date = cal.business_date
 dimensions:
   - name: void_category
@@ -435,7 +435,7 @@ measures:
     comment: Voids made and approved by the same person.
 $$;
 
-ALTER VIEW applebees_semantic.semantic.mv_sales_discounts SET TAGS ('layer' = 'semantic', 'table_role' = 'metric_view');
-ALTER VIEW applebees_semantic.semantic.mv_discount_usage SET TAGS ('layer' = 'semantic', 'table_role' = 'metric_view');
-ALTER VIEW applebees_semantic.semantic.mv_card_tips SET TAGS ('layer' = 'semantic', 'table_role' = 'metric_view');
-ALTER VIEW applebees_semantic.semantic.mv_voids SET TAGS ('layer' = 'semantic', 'table_role' = 'metric_view');
+ALTER VIEW ${catalog}.semantic.mv_sales_discounts SET TAGS ('layer' = 'semantic', 'table_role' = 'metric_view');
+ALTER VIEW ${catalog}.semantic.mv_discount_usage SET TAGS ('layer' = 'semantic', 'table_role' = 'metric_view');
+ALTER VIEW ${catalog}.semantic.mv_card_tips SET TAGS ('layer' = 'semantic', 'table_role' = 'metric_view');
+ALTER VIEW ${catalog}.semantic.mv_voids SET TAGS ('layer' = 'semantic', 'table_role' = 'metric_view');

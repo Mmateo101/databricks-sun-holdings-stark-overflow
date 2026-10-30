@@ -1,164 +1,116 @@
-# Stark Overflow: Discount Fraud Detection on Databricks
+# Stark Overflow: discount-policy investigation on Databricks
 
-Team **Stark Overflow** solution for the *Sun Holdings × Databricks × Tec de Monterrey* challenge: detect possible discount, void and tip fraud by employees and managers in Applebee's restaurants using point-of-sale (POS) data.
+Team **Stark Overflow**, Sun Holdings × Databricks × Tec de Monterrey datathon.
 
-> **Data notice.** This repository contains code and documentation only. No business data, workspace identifiers or credentials are stored here; all data stays inside the Databricks workspace.
+We turn POS transactions into auditable indicators and weekly review priorities. The business objective is **more independently verified policy-violating employee-weeks per review**, including accidental mistakes. Managers inspect the underlying discounts and applicable policies before reaching a conclusion.
 
-## Contents
+**Public package:** source code, documentation and invented demonstration data. Company transactions, employee records, reference workbooks, private workspace identifiers and credentials are excluded.
 
-- [Architecture](#architecture)
-- [Repository structure](#repository-structure)
-- [Medallion layers](#medallion-layers)
-- [Business rules](#business-rules)
-- [Fraud indicators](#fraud-indicators)
-- [Semantic layer and Genie](#semantic-layer-and-genie)
-- [Dashboards](#dashboards)
-- [Prediction model](#prediction-model)
-- [How to deploy](#how-to-deploy)
-- [Team](#team)
+## Try the synthetic demonstration
+
+The model and dashboard run without a Databricks account:
+
+```bash
+python -m venv .venv
+# Activate .venv for your shell, then:
+python -m pip install -r requirements.txt
+python -m unittest discover -s tests -v
+python examples/run_demo.py
+```
+
+Open [dashboards/model-demo.html](dashboards/model-demo.html) after downloading/cloning the repository. The generated demo is included, so you can open it before installing Python. For a local web preview, run `python -m http.server 8000` and visit `http://localhost:8000/dashboards/model-demo.html`.
+
+It contains **30 invented employees** across three invented restaurants. Explore population KPIs, a temporary activity spike followed by ordinary observations, persistent higher activity, missing evidence, training-only history and 108 assumption settings. The plots load D3 from a pinned public CDN; no company data service is contacted. [Three-minute walkthrough](docs/demo.md).
+
+![Synthetic employee timeline](docs/images/synthetic-timeline.png)
+
+## What is implemented
+
+| Component | Implementation |
+| --- | --- |
+| Data engineering | Fixed-schema JSONL ingestion, common check acceptance/deduplication boundary, 17 Silver outputs, decimal Gold components and per-run snapshots |
+| Team fraud indicators | Employee and manager daily/weekly discount, tip and void metrics |
+| Weekly model | Recorded discount-actor history, beta-binomial background fitting, normalized conditional likelihoods and temporal filtering |
+| Explanation | Reference prior/posterior, coverage reasons, actual counts and unweighted sensitivity across 108 settings |
+| Exploration | Public synthetic dashboard, authorized employee-history notebook, business KPI/metric-view SQL and Genie configuration |
+| Independent review | Blinded probability sample, audited outcomes, precision@20 and sampling-weighted recall/probability-quality calculations |
+| Reproduction | Configurable Databricks bundle, actual Job/pipeline resources, local tests and GitHub Actions |
+
+**Current limitation:** the historical model used declared assumptions because independently reviewed violation outcomes were unavailable. Violation precision, recall and probability calibration have not been established. The review workflow calculates those measures when sufficient independently verified outcomes exist; it does not invent labels or train against an earlier risk coefficient.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    RAW["Raw POS extracts<br/>(JSONL in a UC volume)"] --> SILVER["Silver<br/>typed, validated,<br/>deduplicated tables"]
-    SILVER --> GOLD["Gold<br/>check facts, discount events,<br/>location-day"]
-    GOLD --> FRAUD["Gold fraud features<br/>employee and manager,<br/>day and week"]
-    SILVER --> FRAUD
-    GOLD --> SEM["Semantic layer<br/>dimensions, KPIs,<br/>metric views"]
-    FRAUD --> SEM
-    SEM --> GENIE["Genie space"]
-    SEM --> DASH["AI/BI dashboards"]
-    FRAUD --> MODEL["Prediction model<br/>(job)"]
-    MODEL --> DASH
+    RAW[Authorized POS JSONL] --> SILVER[Lakeflow Silver pipeline]
+    SILVER --> GOLD[Isolated Gold snapshot]
+    GOLD --> FEATURES[Actor weekly observations]
+    FEATURES --> MODEL[Temporal Bayesian scenarios]
+    MODEL --> VIEW[Employee history and dashboards]
+    MODEL --> REVIEW[Independent policy review]
+    REVIEW --> METRICS[Review yield and probability evaluation]
+    GOLD --> SEMANTIC[Semantic KPIs and metric views]
+    SEMANTIC --> GENIE[Genie]
+    SEMANTIC --> BI[Business dashboards]
 ```
 
-Everything runs on Databricks: Lakeflow Declarative Pipelines for silver and gold, Unity Catalog for governance, metric views for the semantic layer, Genie for natural-language questions, AI/BI dashboards and Lakeflow Jobs for orchestration.
+The model runs in Lakeflow Jobs. Silver uses a Lakeflow Declarative Pipeline; Gold is a separate, isolated snapshot task. The semantic/Genie scripts remain explicit warehouse SQL operations. [Grains, lineage and ownership](docs/architecture.md).
 
-## Repository structure
+## Weekly model
 
-```
-.
-├── databricks.yml              # Databricks Asset Bundle definition
-├── resources/
-│   ├── jobs/                   # Job definitions, schedules and task orchestration
-│   └── pipelines/              # Lakeflow pipeline configuration
-├── src/
-│   ├── transformations/
-│   │   ├── silver/             # Raw ingestion, validation and cleaned tables
-│   │   └── gold/               # Business-ready tables and fraud features
-│   ├── semantic/               # Dimensions, KPI tables and metric views
-│   └── models/                 # Fraud prediction model
-├── genie/                      # Genie space definition (instructions, examples, benchmarks)
-└── dashboards/                 # AI/BI dashboard definitions
-```
+The target is at least one positive discount applied by the **recorded discount actor** in an employee–restaurant–Thursday week that violated an applicable policy, including a mistake. This is distinct from the first-payment owner used by the team's general employee indicator tables.
 
-## Medallion layers
+`K` positive-discount checks among `N` eligible opportunities form one count observation. Four earlier complete weeks fit an unlabeled restaurant background. Hypothetical conditional distributions and temporal transitions update each later week. Incomplete observations retain a predicted prior, training weeks have no estimate, and missing calendar weeks are not invented as clean records.
 
-### Raw
-POS extracts land as JSONL files in a Unity Catalog volume, partitioned by date: checks (with nested items, discounts, payments, taxes and voids) and the employee, item, location and revenue center dimensions.
+The reference assumes a 5% weekly base rate, one-week memory half-life and 2× activity odds under the hypothetical violation state. The full 108-setting grid tests weaker, stronger and contrary assumptions. These settings are not empirically estimated fraud prevalence. **The sensitivity envelope is not a posterior credible interval.** [Full model card](docs/model-card.md).
 
-### Silver
-_To be completed with the pipeline code._ Streaming ingestion with a fixed typed schema, record acceptance and quality rules, and one cleaned table per entity: checks, check items, item and check discounts, payments, voids, taxes, discount events, employees, items, locations and revenue centers, plus quality review tables.
+## Evidence and evaluation
 
-### Gold
-_To be completed with the pipeline code._ Business-ready tables:
+The executed development model covered **3,174 observed employee histories and 34,342 actor-location-weeks**. On 22,914 later eligible count observations, beta-binomial mean log predictive score was approximately **−2.596**, compared with **−2.868** for the binomial comparator; higher is better. This assesses discount-count prediction, not verified violation detection.
 
-| Table | Grain | Purpose |
-|---|---|---|
-| `check_facts` | check | Gross sales, discounts and discount-rate eligibility per check |
-| `discount_events` | discount application | Who applied and who approved each discount |
-| `location_day` | restaurant × day | Daily sales and discount totals |
-| `fraud_employee_day` / `_week` | employee × restaurant × day / week | Employee fraud indicators |
-| `fraud_manager_day` / `_week` | manager × restaurant × day / week | Manager fraud indicators |
+The independent review setup prepared 66 cases with 927 positive-discount-check evidence records and zero reviewed outcomes at setup. Its comparison baseline is positive-discount frequency; it is not the unlocated original Gold risk coefficient. No measured financial savings or confirmed employee misconduct is claimed.
 
-## Business rules
+The public portable wrappers are an adaptation of that executed workflow. Local tests, a synthetic demo and bundle validation are separate from a fresh end-to-end cloud run. [Results and verification scope](docs/results.md), [review protocol](docs/review-protocol.md).
 
-- A check is identified by `(location_id, business_date, check_id)`.
-- The **check owner** is the first employee who took a payment on it; gift card sales are excluded.
-- **Card payments** are credit cards plus online ordering payments.
-- The **fraud week** runs Thursday to Wednesday.
-- Employee or manager ID `0` means "not specified" in the POS.
-- Weekly ratios are recomputed from weekly sums, never averaged from daily ratios.
+## Deploy in an authorized workspace
 
-## Fraud indicators
-
-### Employees
-
-| # | Indicator | Formula | Suspicious when |
-|---|---|---|---|
-| 1 | `discount_ratio` | discount amount / sales | High |
-| 2 | `cash_ratio` | share of cash or no-tip checks, discounted vs. non-discounted | Above 1 |
-| 3 | `tip_ratio` | card tip rate, discounted vs. non-discounted checks | Above 1 |
-| 4 | `discount_frequency` | discounted checks / checks | High |
-| 5 | `full_comp_ratio` | checks fully given away / checks | High |
-| 6 | `discount_void_ratio` | checks with a discount and a void / checks | High |
-| 7 | `card_no_tip_ratio` | share of card checks with no tip, discounted vs. non-discounted | Above 1 |
-| 8 | `voids_per_100_checks`, `void_ratio` | voided items per 100 checks, voided amount / sales | High |
-
-### Managers
-
-| # | Indicator | Formula | Suspicious when |
-|---|---|---|---|
-| 1 | `approval_ratio` | approved discount amount / store sales | High |
-| 2 | `self_approval_ratio` | discounts the manager both applied and approved / approvals | Above 0 |
-| 3 | `concentration_ratio` | approvals to the most-approved employee / approvals | High |
-| 4 | `approved_voids_per_100_checks` | approved voids per 100 store checks | High |
-| 5 | `approval_vs_peers` | approved amount vs. the average manager of the same store and period | Well above 1 |
-
-_Each indicator is a signal to review, not proof of fraud._
-
-## Semantic layer and Genie
-
-A separate catalog (`applebees_semantic`) holds clean copies of the final silver and gold tables plus a `semantic` schema with documented dimensions (restaurant, channel, employee, discount code, calendar), KPI tables and metric views for sales and discounts, discount usage, card tips, voids and the employee and manager fraud indicators. Every table and column has an English comment, plus primary/foreign keys and tags, so Genie can answer questions in natural language.
-
-The Genie space is defined in `genie/space_config.py` with instructions, example queries and benchmark questions.
-
-### Build order
-
-Scripts run statement by statement on a SQL warehouse with `tools/run_sql.py`:
+Configure the authenticated CLI profile, authorized source volume and dedicated output namespaces outside Git:
 
 ```bash
-export DATABRICKS_WAREHOUSE_ID=<your-warehouse-id>
-python3 tools/run_sql.py src/semantic/00_catalog.sql src/semantic/01_silver_copy.sql \
-  src/semantic/02_gold_copy.sql src/semantic/03_reference.sql src/semantic/04_semantic_dimensions.sql \
-  src/semantic/05_semantic_kpis.sql src/semantic/06_semantic_metric_views.sql
+databricks bundle validate --profile YOUR_PROFILE --var source_root=/Volumes/YOUR_CATALOG/YOUR_SCHEMA/YOUR_VOLUME
+databricks bundle plan --profile YOUR_PROFILE --var source_root=/Volumes/YOUR_CATALOG/YOUR_SCHEMA/YOUR_VOLUME
 ```
 
-| Step | Files | Builds |
-|---|---|---|
-| 1 | `src/semantic/00` to `03` | Catalog, schemas, silver/gold copies, reference tables |
-| 2 | `src/semantic/04` to `06` | Dimensions, KPI tables, metric views |
-| 3 | `src/transformations/gold/fraud/fraud_*_day.sql`, then `fraud_*_week.sql` | Employee and manager fraud tables |
-| 4 | `src/transformations/gold/fraud/fraud_comments.sql` | Table and column comments (generated by `build_comments.py`) |
-| 5 | `src/semantic/07_semantic_fraud.sql` | Keys, tags and the fraud metric views |
-| 6 | `python3 genie/space_config.py validate` | Runs every Genie example and benchmark query |
+After reviewing the plan, deploy and run `weekly_model`. Its tasks are Silver refresh → Gold snapshot → actor preparation → weekly scoring. `review_pilot` is a separate on-demand Job requiring a completed model run. No schedule is configured. Ownership guards remain active; personal hostnames, profiles, identities and run IDs are not committed. [Deployment guide](docs/deployment.md).
 
-The fraud scripts take the table names as variables, for example:
+## Repository map
 
-```bash
-python3 tools/run_sql.py src/transformations/gold/fraud/fraud_employee_week.sql \
-  --var source=applebees_semantic.gold.fraud_employee_day \
-  --var target=applebees_semantic.gold.fraud_employee_week
+```text
+config/                           Declared scenario and synthetic parameters
+examples/run_demo.py               Reproducible synthetic model/dashboard
+dashboards/                       Dashboard source, demo and authorized SQL queries
+src/transformations/silver/        Typed ingestion and accepted transaction/dimension SQL
+src/transformations/gold/base/     Check facts, discount events and restaurant-day SQL
+src/transformations/gold/fraud/    Team employee/manager indicators and documentation
+src/models/                       Count/temporal/review logic and ownership boundaries
+src/semantic/                     Team copy layer, dimensions, KPIs and metric views
+notebooks/                        Portable Gold, actor, scoring, history and review tasks
+resources/                        Actual pipeline and Job definitions
+genie/                            Team Genie instructions, examples and benchmarks
+tests/                            Numerical, review, ownership and portability checks
+docs/                             Model card, results, deployment and judge walkthrough
 ```
 
-The reference tables (discount dictionary, official offers, promotion calendar) are loaded from files in a Unity Catalog volume; those files are not part of this repository.
+## Business indicators and semantic layer
 
-## Dashboards
+The team's employee indicators include discount ratio/frequency, full comps, discount-and-void checks, card tip/no-tip contrasts, cash/no-tip contrasts and void measures. Manager indicators include approval ratio, self-approval, approval concentration, approved voids and comparison with peers. They are investigative signals; only the activity-count block is a likelihood input in the current model.
 
-_To be completed._
+Checks use `(location_id,business_date,check_id)`. Fraud weeks run Thursday–Wednesday. ID 0 is unspecified. Weekly ratios use weekly sums, never averages of daily ratios. Monetary display uses recorded units; currency has not been confirmed.
 
-## Prediction model
+The semantic catalog contains dimensions, KPI tables and metric views for sales, discounts, tips, voids and employee/manager indicators. Genie instructions and benchmarks live in `genie/space_config.py`. Preserve source lineage outside those business-friendly copies.
 
-_To be completed by the modeling team._
-
-## How to deploy
-
-1. Install the [Databricks CLI](https://docs.databricks.com/dev-tools/cli/install.html) and log in: `databricks auth login`.
-2. Set the bundle variables (`catalog`, `source_root`, `warehouse_id`) for your workspace.
-3. Validate: `databricks bundle validate`.
-4. Deploy only after agreeing with the team: `databricks bundle deploy`.
+Semantic build order: `src/semantic/00`–`03`, then `04`–`06`, employee/manager fraud day scripts, their week scripts, `fraud_comments.sql`, then `07_semantic_fraud.sql`. Company reference files are an external prerequisite. The SQL runner accepts explicit `catalog`, `source_silver_schema`, `source_gold_schema`, `source` and `target` variables; dry runs make no remote calls. See [deployment examples](docs/deployment.md).
 
 ## Team
 
-_To be completed._
+Stark Overflow combines POS data engineering, business indicators/semantic modeling, Genie, temporal modeling, independent-review evaluation and visualization. Existing team contributions are retained; contributor history is available in [GitHub contributors](https://github.com/Mmateo101/databricks-sun-holdings-stark-overflow/graphs/contributors).

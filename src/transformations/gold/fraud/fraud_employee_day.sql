@@ -1,4 +1,4 @@
--- applebees_semantic.gold.fraud_employee_day: one row per employee and business date.
+-- ${catalog}.gold.fraud_employee_day: one row per employee and business date.
 -- Indicators 1-3 designed by Mateo; indicators 4-8 added by Miguel.
 -- Each check belongs to the employee who took its first payment (min_by(employee_id, payment_ordinal));
 -- 'GC Sold' rows are gift card sales, not payments, and are left out. Checks with no payment or owner 0/NULL
@@ -15,23 +15,23 @@ WITH pay AS (  -- one row per check: owner, tender mix, tips, bills
     sum(amount - tip) AS billed,
     sum(CASE WHEN is_credit_card OR payment_type LIKE 'OLO-%' THEN tip ELSE 0 END) AS card_tip,
     sum(CASE WHEN is_credit_card OR payment_type LIKE 'OLO-%' THEN amount - tip ELSE 0 END) AS card_billed
-  FROM applebees_semantic.silver.payments
+  FROM ${catalog}.silver.payments
   WHERE payment_type <> 'GC Sold'
   GROUP BY location_id, business_date, check_id
 ),
 items AS (
   SELECT location_id, business_date, check_id, sum(gross_price) AS sales
-  FROM applebees_semantic.silver.check_items
+  FROM ${catalog}.silver.check_items
   GROUP BY location_id, business_date, check_id
 ),
 disc AS (
   SELECT location_id, business_date, check_id, sum(amount) AS discount_amount
-  FROM applebees_semantic.gold.discount_events
+  FROM ${catalog}.gold.discount_events
   GROUP BY location_id, business_date, check_id
 ),
 voids AS (
   SELECT location_id, business_date, check_id, count(*) AS void_items, sum(amount) AS void_amount
-  FROM applebees_semantic.silver.voids
+  FROM ${catalog}.silver.voids
   GROUP BY location_id, business_date, check_id
 ),
 chk AS (  -- one row per owned check with every fact the indicators need
