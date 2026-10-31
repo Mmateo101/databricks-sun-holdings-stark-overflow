@@ -9,7 +9,7 @@ from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'src/models'))
 from workspace_runtime import Workspace,identifier,run_identifier
-spec=importlib.util.spec_from_file_location('sql_runner',ROOT/'tools/run_sql.py')
+spec=importlib.util.spec_from_file_location('sql_runner',ROOT/'src/transformations/run_sql.py')
 runner=importlib.util.module_from_spec(spec);spec.loader.exec_module(runner)
 
 class Result:
@@ -62,7 +62,7 @@ class PortabilityTests(unittest.TestCase):
 
     def test_dry_run_needs_no_credentials_or_warehouse(self):
         with patch.dict(os.environ,{},clear=True),patch.object(runner,'execute',side_effect=AssertionError('network forbidden')),patch('sys.stdout',new_callable=io.StringIO):
-            with patch.object(sys,'argv',['run_sql.py',str(ROOT/'src/semantic/02_gold_copy.sql'),'--dry-run','--var','source_gold_schema=demo.gold']):
+            with patch.object(sys,'argv',['run_sql.py',str(ROOT/'src/transformations/gold/semantic/02_gold_copy.sql'),'--dry-run','--var','source_gold_schema=demo.gold']):
                 runner.main()
 
     def test_live_execution_requires_warehouse_before_api(self):

@@ -1,7 +1,7 @@
 """Genie space definition for the Applebee's fraud challenge (semantic layer in catalog applebees_semantic).
 
-python3 genie/space_config.py validate   -> runs every example and benchmark SQL on the warehouse
-python3 genie/space_config.py json       -> writes genie/serialized_space.json (payload for create-space)
+python src/transformations/gold/semantic/genie_space.py validate   -> runs every example and benchmark SQL on the warehouse
+python src/transformations/gold/semantic/genie_space.py json       -> writes serialized_space.json next to this file (payload for create-space)
 """
 import os
 import json
@@ -180,7 +180,7 @@ def serialized_space():
 
 if __name__ == "__main__":
     if sys.argv[1:] == ["validate"]:
-        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+        sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
         from run_sql import execute
         for kind, items in (("example", EXAMPLES), ("benchmark", BENCHMARKS)):
             for q, s in items:

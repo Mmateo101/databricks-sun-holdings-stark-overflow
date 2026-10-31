@@ -14,7 +14,7 @@ from demo import run_demo
 
 class InferenceTests(unittest.TestCase):
     def setUp(self):
-        self.p = json.loads((ROOT / "config/synthetic.json").read_text())
+        self.p = json.loads((ROOT / "demo/synthetic.json").read_text())
 
     def test_joint_network_by_independent_enumeration(self):
         for d, t in product([None] + self.p["activity_states"], [None] + self.p["tip_states"]):

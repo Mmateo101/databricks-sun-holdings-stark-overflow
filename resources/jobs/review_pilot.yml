@@ -9,7 +9,7 @@ resources:
           timeout_seconds: 1800
           max_retries: 0
           notebook_task:
-            notebook_path: ../../notebooks/review_cases.py
+            notebook_path: ../../src/models/review_cases.py
             base_parameters:
               repo_root: ${workspace.file_path}
               catalog: ${var.catalog}

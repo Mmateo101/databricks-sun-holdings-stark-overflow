@@ -51,4 +51,4 @@ Compare count prediction with a binomial baseline on later weeks. Count predicti
 
 Use outputs to select records for investigation alongside source evidence and sensitivity. Probabilities are assumption dependent and not empirically calibrated. No measured fraud accuracy, financial savings, confirmed misconduct or automated personnel decision is claimed. This is a historical review model, not a forecast of next week's misconduct.
 
-The source implements a finite temporal Bayesian filter; the small discrete multi-indicator engine is retained only as a synthetic arithmetic demonstration. See `config/synthetic.json` and `src/models/demo.py` for that separate example.
+The source implements a finite temporal Bayesian filter; the small discrete multi-indicator engine is retained only as a synthetic arithmetic demonstration. See `demo/synthetic.json` and `src/models/demo.py` for that separate example.

@@ -1,5 +1,5 @@
 -- Semantic layer for the fraud indicator tables (gold.fraud_employee_day/_week, gold.fraud_manager_day/_week).
--- Run after the fraud/*.sql builds and fraud/fraud_comments.sql (CREATE OR REPLACE drops keys and tags).
+-- Run after the gold/fraud_*.sql builds and gold/fraud_comments.sql (CREATE OR REPLACE drops keys and tags).
 -- Keys are informational. Metric views read the DAY tables so dashboards can filter by date; the WEEK tables
 -- are the model inputs and Genie reads them directly for exact weekly values.
 

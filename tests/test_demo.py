@@ -5,7 +5,10 @@ import math
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 sys.path.insert(0,str(ROOT/'src/models'))
-from examples.run_demo import build_payload,synthetic_rows
+import importlib.util
+_spec=importlib.util.spec_from_file_location('run_demo',ROOT/'demo/run_demo.py')
+_run_demo=importlib.util.module_from_spec(_spec);_spec.loader.exec_module(_run_demo)
+build_payload,synthetic_rows=_run_demo.build_payload,_run_demo.synthetic_rows
 from count_model import beta_binomial_log_pmf
 
 class SyntheticDemoTests(unittest.TestCase):

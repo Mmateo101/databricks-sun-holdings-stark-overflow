@@ -31,7 +31,7 @@ def synthetic_rows():
     return rows
 
 def build_payload():
-    config=json.loads((ROOT/'config/weekly-scenarios.json').read_text(encoding='utf-8'))
+    config=json.loads((ROOT/'src/models/weekly_scenarios.json').read_text(encoding='utf-8'))
     scenarios=scenario_grid(config);rows=synthetic_rows()
     training_weeks,cutoff=training_boundary(rows,config['training_full_weeks'])
     train=[r for r in rows if r['week_start'] in training_weeks and not observation_status(r).startswith('prior_only')]
@@ -62,13 +62,13 @@ def build_payload():
 def main():
     payload=build_payload()
     assert payload['data_kind']=='synthetic' and len(payload['employees'])==30 and len(payload['grid'])==108
-    template=(ROOT/'dashboards/dashboard.template.html').read_text(encoding='utf-8')
-    fragment=template.replace('__DASHBOARD_DATA_JSON__',json.dumps(payload,separators=(',',':'))).replace('__DASHBOARD_SCRIPT__',(ROOT/'dashboards/dashboard.js').read_text(encoding='utf-8'))
-    css=(ROOT/'dashboards/demo.css').read_text(encoding='utf-8')
+    template=(ROOT/'demo/dashboard.template.html').read_text(encoding='utf-8')
+    fragment=template.replace('__DASHBOARD_DATA_JSON__',json.dumps(payload,separators=(',',':'))).replace('__DASHBOARD_SCRIPT__',(ROOT/'demo/dashboard.js').read_text(encoding='utf-8'))
+    css=(ROOT/'demo/demo.css').read_text(encoding='utf-8')
     header='<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>Stark Overflow · Synthetic model demo</title><style>'+css+'</style></head><body><main><header class="intro"><h1>Discount-policy review prioritization</h1><p>Explore the actual temporal model on invented employees and observations. Every record below is synthetic. Scores depend on assumptions and do not establish a policy violation.</p></header>'
     page=header+fragment+'</main></body></html>\n'
-    (ROOT/'dashboards/model-demo.html').write_text(page,encoding='utf-8')
-    print('Generated dashboards/model-demo.html: 30 invented employees, 108 scenarios, no private inputs.')
+    (ROOT/'demo/model-demo.html').write_text(page,encoding='utf-8')
+    print('Generated demo/model-demo.html: 30 invented employees, 108 scenarios, no private inputs.')
     print('Open it in a browser. D3 loads from its pinned public CDN; model generation and tests make no data-service requests.')
 
 if __name__=='__main__':main()

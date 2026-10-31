@@ -19,7 +19,7 @@ The review setup covered one eligible week: 1,840 informed employee-location-wee
 
 The public package preserves the numerical model and adapts its workspace wrappers to configurable identities, namespaces and run identifiers. Its local synthetic generation and numerical/review/ownership tests can be rerun without private data. The bundle schema is validated separately. The demo uses 30 invented employees, three invented restaurants and 108 scenario settings; its displayed count scores describe that invented dataset only.
 
-`python tools/verify_submission.py` checks the public file inventory, configuration portability, Python syntax, documentation links, templates and synthetic data boundary. GitHub Actions runs the tests, rebuilds the demo and runs that verifier. The verification summary is generated under ignored `evidence/`, not committed with personal execution metadata.
+`python tests/verify_submission.py` checks the public file inventory, configuration portability, Python syntax, documentation links, templates and synthetic data boundary. GitHub Actions runs the tests, rebuilds the demo and runs that verifier. The verification summary is generated under ignored `evidence/`, not committed with personal execution metadata.
 
 The portable Gold/actor/scoring/review wrappers have not been redeployed against private production data as part of preparing this submission. A schema-valid bundle does not establish execution privileges, retention, source correctness or successful live execution. No source data, private run logs, access links or reviewed outcomes accompany this repository.
 

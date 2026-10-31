@@ -6,7 +6,7 @@ The objective is more verified policy-violating employee-weeks per review. An ol
 
 After one model run completes, configure `review_model_run_id` and run the `review_pilot` Job. It prepares the most recent informed week, or an explicitly chosen Thursday week. It takes both frozen top-20 lists (model score and positive-discount-check rate), then samples ten additional cases without replacement from each of three remaining score-rank bands. Overlapping top lists are reviewed once. Each cohort member has a known nonzero inclusion probability; certainty cases have probability 1.
 
-Open `notebooks/review_cases.py` in the deployed bundle. Set `repo_root`, `catalog`, `model_schema`, `expected_owner`, `model_run_id` and `review_batch_id` to the deployment's values. Keep `action=inspect`; select a `case_id` to see its saved positive-discount applications. Scores/ranks are hidden in that display, although analysts with table access can still see them.
+Open `src/models/review_cases.py` in the deployed bundle. Set `repo_root`, `catalog`, `model_schema`, `expected_owner`, `model_run_id` and `review_batch_id` to the deployment's values. Keep `action=inspect`; select a `case_id` to see its saved positive-discount applications. Scores/ranks are hidden in that display, although analysts with table access can still see them.
 
 Managers or teammates who can confirm the policies effective for that location/date and inspect required approval/eligibility evidence perform the review. Use the interactive notebook to record the actual submitting workspace identity. An owner-run Job would record its executing identity. External reviewers can be documented in evidence references/notes; no external account is created automatically.
 

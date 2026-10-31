@@ -7,7 +7,7 @@ import re
 import subprocess
 import sys
 ROOT=Path(__file__).resolve().parents[1]
-sys.path.insert(0,str(ROOT/'tools'))
+sys.path.insert(0,str(ROOT/'src/transformations'))
 from run_sql import statements,render
 
 class Payload(HTMLParser):
@@ -42,7 +42,7 @@ def verify():
                 if target.startswith(('https:','http:','#','mailto:')):continue
                 path=target.split('#')[0].strip('<>')
                 if path and not (p.parent/path).exists():problems.append('Broken document link: '+rel+' -> '+path)
-    parser=Payload();parser.feed((ROOT/'dashboards/model-demo.html').read_text(encoding='utf-8'))
+    parser=Payload();parser.feed((ROOT/'demo/model-demo.html').read_text(encoding='utf-8'))
     data=json.loads(''.join(parser.parts))
     assert data['data_kind']=='synthetic' and data['seed']=='stark-overflow-public-demo-v1'
     assert {r[0] for r in data['employees']}==set(range(1,31))
@@ -52,7 +52,7 @@ def verify():
             assert 0<=r[0]<16 and 0<=r[1]<=r[2] and (r[3] is None or 0<=r[4]<=r[3]<=r[5]<=1)
     variables={'catalog':'demo','source_silver_schema':'source.silver','source_gold_schema':'source.gold',
       'generation_id':'synthetic-generation','source':'demo.gold.fraud_employee_day','target':'demo.gold.fraud_employee_week'}
-    for folder in ('src/semantic','src/transformations/gold/fraud'):
+    for folder in ('src/transformations/gold/semantic','src/transformations/gold'):
         for p in (ROOT/folder).glob('*.sql'):
             for statement in statements(p):render(statement,variables)
     for p in (ROOT/'resources/jobs').glob('*.yml'):

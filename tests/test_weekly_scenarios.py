@@ -15,7 +15,7 @@ from count_model import beta_binomial_log_pmf
 
 class WeeklyScenarioTests(unittest.TestCase):
     def setUp(self):
-        self.config=json.loads((ROOT/'config/weekly-scenarios.json').read_text())
+        self.config=json.loads((ROOT/'src/models/weekly_scenarios.json').read_text())
         self.scenarios=scenario_grid(self.config)
         self.base={None:dict(mean=.2,kappa=12.),20:dict(mean=.2,kappa=12.)}
     def row(self,week=date(2026,5,28),k=2,n=20,**kwargs):

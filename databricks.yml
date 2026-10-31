@@ -37,8 +37,6 @@ variables:
 sync:
   include:
     - src/**
-    - notebooks/**
-    - config/**
     - requirements.txt
   exclude:
     - .venv/**

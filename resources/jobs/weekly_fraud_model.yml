@@ -22,7 +22,7 @@ resources:
           timeout_seconds: 3600
           max_retries: 0
           notebook_task:
-            notebook_path: ../../notebooks/build_gold.py
+            notebook_path: ../../src/transformations/gold/build_gold.py
             base_parameters:
               repo_root: ${workspace.file_path}
               catalog: ${var.catalog}
@@ -38,7 +38,7 @@ resources:
           timeout_seconds: 1800
           max_retries: 0
           notebook_task:
-            notebook_path: ../../notebooks/prepare_actors.py
+            notebook_path: ../../src/models/prepare_actors.py
             base_parameters:
               repo_root: ${workspace.file_path}
               catalog: ${var.catalog}
@@ -55,7 +55,7 @@ resources:
           timeout_seconds: 1800
           max_retries: 0
           notebook_task:
-            notebook_path: ../../notebooks/score_weeks.py
+            notebook_path: ../../src/models/score_weeks.py
             base_parameters:
               repo_root: ${workspace.file_path}
               catalog: ${var.catalog}

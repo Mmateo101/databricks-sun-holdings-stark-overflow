@@ -7,7 +7,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'src' / 'models'))
 from policy_screen import evaluate
-RULES = {r['rule_id']: r for r in json.loads((ROOT/'config/policy-pilot.json').read_text())['rules']}
+RULES = {r['rule_id']: r for r in json.loads((ROOT/'src/models/policy_pilot.json').read_text())['rules']}
 
 
 class PolicyScreenTests(unittest.TestCase):
