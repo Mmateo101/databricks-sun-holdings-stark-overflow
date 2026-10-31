@@ -1,0 +1,20 @@
+resources:
+  jobs:
+    review_pilot:
+      name: Stark Overflow independent policy review
+      max_concurrent_runs: 1
+      description: Prepare a blinded probability sample for independent human review. Review submission uses the interactive notebook.
+      tasks:
+        - task_key: prepare_review
+          timeout_seconds: 1800
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../../src/models/review_cases.py
+            base_parameters:
+              repo_root: ${workspace.file_path}
+              catalog: ${var.catalog}
+              model_schema: ${var.model_schema}
+              expected_owner: ${workspace.current_user.userName}
+              model_run_id: ${var.review_model_run_id}
+              review_batch_id: "review-{{job.run_id}}"
+              action: prepare
