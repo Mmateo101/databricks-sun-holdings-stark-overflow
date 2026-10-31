@@ -1,6 +1,6 @@
 -- Snapshot of the published gold generation (${source_gold_schema} views already filter it)
 -- with business documentation for Genie. Metric definitions follow gold-metrics-v1 (gold reports/summary.sql).
--- ${generation_id} is filled by tools/run_sql.py from ${source_gold_schema}.gold_publication (slot 1).
+-- ${generation_id} is filled by src/transformations/run_sql.py from ${source_gold_schema}.gold_publication (slot 1).
 -- Amounts are DECIMAL in source currency units (USD assumed, not confirmed by the client).
 
 CREATE OR REPLACE TABLE ${catalog}.gold.check_facts

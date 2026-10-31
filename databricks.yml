@@ -30,15 +30,10 @@ variables:
   model_schema:
     description: Dedicated owned model and review output schema.
     default: stark_model_${workspace.current_user.short_name}
-  review_model_run_id:
-    description: Completed model Job run to review; set before running the review Job.
-    default: ""
 
 sync:
   include:
     - src/**
-    - notebooks/**
-    - config/**
     - requirements.txt
   exclude:
     - .venv/**

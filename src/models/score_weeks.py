@@ -18,7 +18,7 @@ from weekly_scenarios import scenario_grid,training_boundary,observation_status,
 from count_model import beta_binomial_log_pmf
 c=Workspace(spark,dbutils.widgets.get('catalog'),dbutils.widgets.get('model_schema'),dbutils.widgets.get('expected_owner'))
 run=run_identifier(dbutils.widgets.get('model_run_id'));actor_run=run_identifier(dbutils.widgets.get('actor_run_id'))
-config=json.loads((root/'config/weekly-scenarios.json').read_text(encoding='utf-8'))
+config=json.loads((root/'src/models/weekly_scenarios.json').read_text(encoding='utf-8'))
 code_hash=fingerprint([(name,(root/'src/models'/name).read_text(encoding='utf-8')) for name in ('weekly_scenarios.py','count_model.py','inference.py')]+[('config',config)])
 c.ensure_schema()
 if spark.catalog.tableExists(c.table('scenario_model_runs')):
