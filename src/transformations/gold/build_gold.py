@@ -25,7 +25,7 @@ if spark.catalog.tableExists(c.table('gold_run_inputs')):
     previous=spark.table(c.table('gold_run_inputs')).where(F.col('model_run_id')==run).collect()
     if previous and (len(previous)!=1 or previous[0].code_sha256!=code_hash):raise ValueError('Gold retry source or SQL changed')
 c.append('gold_run_inputs',spark.createDataFrame([dict(model_run_id=run,source_namespace=source,code_sha256=code_hash)]),run)
-names=['silver_checks','silver_check_items','silver_discount_events','silver_payments','silver_employees','silver_items','silver_locations','silver_revenue_centers']
+names=['silver_checks','silver_check_items','silver_discount_events','silver_payments','silver_voids','silver_employees','silver_items','silver_locations','silver_revenue_centers']
 for name in names:
     # Silver materialized views cannot always be time-travelled. Persist their
     # inputs once in this isolated run; downstream actor/model reads pin Delta versions.

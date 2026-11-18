@@ -3,7 +3,7 @@ resources:
     weekly_model:
       name: Stark Overflow weekly policy review model
       max_concurrent_runs: 1
-      description: Isolated Silver/Gold preparation and assumption-based weekly scoring. No schedule or calibrated fraud claim.
+      description: Isolated Silver/Gold preparation, assumption-based weekly scoring and the employee time series. No schedule or calibrated fraud claim.
       environments:
         - environment_key: numerical
           spec:
@@ -11,6 +11,7 @@ resources:
             dependencies:
               - numpy>=1.26,<3
               - scipy>=1.11,<2
+              - pandas>=2.0,<3
       tasks:
         - task_key: refresh_silver
           pipeline_task:
@@ -63,3 +64,18 @@ resources:
               expected_owner: ${workspace.current_user.userName}
               model_run_id: "{{job.run_id}}"
               actor_run_id: "{{job.run_id}}"
+        - task_key: score_time_series
+          depends_on:
+            - task_key: build_gold
+          environment_key: numerical
+          timeout_seconds: 1800
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../../src/models/score_time_series.py
+            base_parameters:
+              repo_root: ${workspace.file_path}
+              catalog: ${var.catalog}
+              model_schema: ${var.model_schema}
+              expected_owner: ${workspace.current_user.userName}
+              model_run_id: "{{job.run_id}}"
+              gold_namespace: "{{tasks.build_gold.values.gold_namespace}}"

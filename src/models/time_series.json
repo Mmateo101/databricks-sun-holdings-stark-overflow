@@ -1,0 +1,21 @@
+{
+  "model_version": "employee-time-series-v1",
+  "indicators": {
+    "discount_frequency": "bb",
+    "full_comp": "bb",
+    "discount_void": "bb",
+    "voids": "nb"
+  },
+  "window_weeks": 8,
+  "gap_weeks": 2,
+  "change_factor": 2.0,
+  "freeze_normal": true,
+  "min_history_weeks": 3,
+  "min_history_checks": 40,
+  "min_cell_checks": 30,
+  "weekly_checks_for_1_week": 40,
+  "weekly_checks_for_2_weeks": 20,
+  "target_rising_rate": 0.03,
+  "spike_probability": 0.001,
+  "threshold_grid": [1.0, 15.0, 0.5]
+}

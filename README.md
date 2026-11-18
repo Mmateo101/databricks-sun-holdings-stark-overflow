@@ -32,7 +32,7 @@ The same idea is then applied to **managers**, who approve discounts and voids.
 flowchart LR
     RAW["Bronze<br/>raw POS JSON<br/>115 days of checks + dimensions"] --> SILVER["Silver<br/>12 clean tables<br/>key: restaurant, date, check"]
     SILVER --> GOLD["Gold<br/>fraud indicators<br/>employee and manager, by day and week"]
-    GOLD --> JOBS["Jobs<br/>weekly Bayesian model<br/>time series (planned)"]
+    GOLD --> JOBS["Jobs<br/>weekly Bayesian model<br/>employee time series"]
     GOLD --> SEM["Semantic layer<br/>dimensions, KPIs, metric views"]
     SEM --> GENIE["Genie<br/>questions in English or Spanish"]
 ```
@@ -104,9 +104,14 @@ Full assumptions: [model card](docs/model-card.md). Measured results and what th
 
 To turn the ranking into measured accuracy, a separate on-demand job (`review_pilot`) draws a blinded probability sample of employee-weeks for managers to review against the applicable policies. From the reviewed outcomes it computes precision at a fixed review budget, sampling-weighted recall and calibration. The first sample has 66 cases with 927 discount-check evidence records; no outcomes have been reviewed yet. [Review protocol](docs/review-protocol.md).
 
-### Time series (planned)
+### Employee time series
 
-A per-employee time series to tell whether each employee is rising or falling against their own history.
+Each employee against their own history: every week (or every 2–4 weeks for low-volume employees) is labelled
+`rising`, `falling`, `spike`, `stable` or `insufficient_history`, with the indicator that drives it. The expectation
+comes from the other employees of the same store, week, daypart and channel, so promotions and shift changes are not
+read as the employee changing. A likelihood-ratio CUSUM per indicator looks for sustained changes, with one threshold
+per indicator set to keep alarms at about 3 % of evaluable periods. In development tests it caught 96 % of injected
+jumps in discount-and-void checks within 6 weeks, but only 44 % of jumps in full comps. Details: [time series](docs/time-series.md).
 
 ## 7. Semantic layer and Genie
 
@@ -123,7 +128,7 @@ The repository follows the Sun Holdings Databricks template: orchestration in `r
 ├── requirements.txt                      numpy / scipy for the model
 ├── resources/
 │   ├── jobs/
-│   │   ├── weekly_fraud_model.yml        Silver refresh → gold snapshot → employee weeks → weekly scoring
+│   │   ├── weekly_fraud_model.yml        Silver refresh → gold snapshot → employee weeks → weekly scoring + time series
 │   │   └── review_pilot.yml              On demand: blinded sample for independent review
 │   └── pipelines/
 │       └── silver_pipeline.yml           Lakeflow pipeline for the silver layer
