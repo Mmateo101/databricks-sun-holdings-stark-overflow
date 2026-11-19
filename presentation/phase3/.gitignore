@@ -1,0 +1,5 @@
+# Generated from Databricks: business data, never committed
+data.json
+redes.json
+dist/
+.vercel/
