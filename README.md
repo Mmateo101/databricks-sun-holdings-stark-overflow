@@ -113,6 +113,11 @@ read as the employee changing. A likelihood-ratio CUSUM per indicator looks for 
 per indicator set to keep alarms at about 3 % of evaluable periods. In development tests it caught 96 % of injected
 jumps in discount-and-void checks within 6 weeks, but only 44 % of jumps in full comps. Details: [time series](docs/time-series.md).
 
+### Weekly review list
+
+The last task of the Job joins both models into one row per employee and week with a priority (1 high, 2 medium,
+3 watch) and the reasons in plain words, ready for HR. Details: [review list](docs/review-list.md).
+
 ## 7. Semantic layer and Genie
 
 The catalog `applebees_semantic` holds the final silver and gold tables, a `reference` schema with the meaning of each discount code, and a `semantic` schema with dimensions, KPIs and six metric views. Every metric is defined once and documented.
