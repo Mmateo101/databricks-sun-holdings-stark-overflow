@@ -95,3 +95,16 @@ resources:
               expected_owner: ${workspace.current_user.userName}
               model_run_id: "{{job.run_id}}"
               gold_namespace: "{{tasks.build_gold.values.gold_namespace}}"
+        - task_key: cleanup_gold_snapshots
+          depends_on:
+            - task_key: build_review_list
+          timeout_seconds: 600
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../../src/transformations/gold/cleanup_gold_snapshots.py
+            base_parameters:
+              repo_root: ${workspace.file_path}
+              catalog: ${var.catalog}
+              gold_schema: ${var.gold_schema}
+              expected_owner: ${workspace.current_user.userName}
+              gold_namespace: "{{tasks.build_gold.values.gold_namespace}}"
