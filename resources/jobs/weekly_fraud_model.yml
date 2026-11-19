@@ -79,3 +79,19 @@ resources:
               expected_owner: ${workspace.current_user.userName}
               model_run_id: "{{job.run_id}}"
               gold_namespace: "{{tasks.build_gold.values.gold_namespace}}"
+        - task_key: build_review_list
+          depends_on:
+            - task_key: score_weeks
+            - task_key: score_time_series
+          environment_key: numerical
+          timeout_seconds: 1200
+          max_retries: 0
+          notebook_task:
+            notebook_path: ../../src/models/build_review_list.py
+            base_parameters:
+              repo_root: ${workspace.file_path}
+              catalog: ${var.catalog}
+              model_schema: ${var.model_schema}
+              expected_owner: ${workspace.current_user.userName}
+              model_run_id: "{{job.run_id}}"
+              gold_namespace: "{{tasks.build_gold.values.gold_namespace}}"
