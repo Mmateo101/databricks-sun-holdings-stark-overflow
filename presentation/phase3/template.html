@@ -1,0 +1,815 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Applebee's Fraud Detection · Proposed Solution</title>
+<style>
+/*__FONTS__*/
+:root{--n0:#04061a;--n1:#0B1030;--n2:#151c4a;--n3:#222b66;--cream:#FFF8E8;--warm:#FFD27A;--warm2:#FFB547;--red:#E23B2E;--rose:#FF7363;--teal:#6fd3c7;--violet:#9b7bd1;--mut:#a9afd6;
+  --head:'Fraunces',Georgia,serif;--body:'Nunito','Segoe UI',sans-serif;--hand:'Caveat',cursive}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#02030c}
+#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;overflow:hidden;background:var(--n1);font-family:var(--body);color:var(--cream)}
+#world{position:absolute;left:0;top:0;width:1920px;height:3240px;transform-origin:960px 2700px;will-change:transform}
+#world svg{position:absolute;left:0;top:0}
+.sc{position:absolute;inset:0;visibility:hidden}
+.a{position:absolute;left:0;top:0}
+#grain{position:absolute;inset:0;z-index:90;pointer-events:none;mix-blend-mode:overlay;opacity:.45}
+#vig{position:absolute;inset:0;z-index:91;pointer-events:none;background:radial-gradient(ellipse at 50% 46%,rgba(0,0,0,0) 55%,rgba(4,6,24,.55) 100%)}
+#ink{position:absolute;inset:0;z-index:95;pointer-events:none} #ink.on{pointer-events:auto;cursor:crosshair}
+#bar{position:absolute;left:0;bottom:0;height:4px;width:100%;background:var(--warm);z-index:96;transform-origin:0 0;transform:scaleX(0);transition:transform .6s}
+.eb{font:800 20px var(--body);letter-spacing:.24em;text-transform:uppercase;color:var(--warm)}
+.h1{font:700 92px/1.04 var(--head);letter-spacing:-.01em}
+.h2{font:700 64px/1.08 var(--head)}
+.hand{font-family:var(--hand);font-weight:700}
+.w{display:inline-block;white-space:pre}
+.glow{text-shadow:0 0 18px rgba(255,210,122,.55)}
+.card{position:absolute;left:0;top:0;width:470px;padding:30px 32px;border-radius:22px;background:rgba(21,28,74,.82);border:2px solid rgba(255,210,122,.45);backdrop-filter:blur(2px)}
+.card .k{font:800 18px var(--body);letter-spacing:.22em;color:var(--warm);text-transform:uppercase}
+.card .v{font:700 42px/1.12 var(--head);margin-top:10px}
+.card svg{float:right}
+.chip{display:inline-block;padding:10px 20px;border-radius:999px;background:rgba(255,248,232,.1);border:2px solid rgba(255,248,232,.25);font:800 24px var(--body)}
+.paper{background:#FFF8E8;color:#1d1a24;border-radius:14px;box-shadow:0 30px 70px rgba(0,0,0,.45)}
+.mail{width:900px;overflow:hidden}
+.mail .hd{padding:20px 30px;background:#f1e8d6;font:700 21px/1.6 var(--body);color:#6b6272;border-bottom:2px solid #e2d6bf}
+.mail .hd b{color:#1d1a24}
+.mail .sj{font:700 34px var(--head);color:#1d1a24;margin-top:4px}
+.mail .bd{padding:24px 30px 30px;font:700 26px/1.5 var(--body)}
+.mail li{margin:8px 0}
+.mail table{border-collapse:collapse;width:100%;font:700 21px var(--body)}
+.mail td,.mail th{padding:9px 10px;border-bottom:2px solid #eadfc9;text-align:left}
+.mail th{font:800 15px var(--body);letter-spacing:.12em;text-transform:uppercase;color:#8a8090}
+.p1{display:inline-block;padding:3px 10px;border-radius:8px;background:var(--red);color:#fff;font:800 17px var(--body)}
+.p2{display:inline-block;padding:3px 10px;border-radius:8px;background:#f0a35e;color:#fff;font:800 17px var(--body)}
+.cell{position:absolute;left:0;top:0;width:330px;height:150px;border-radius:16px;display:flex;flex-direction:column;justify-content:center;padding:14px 20px;font:800 24px/1.25 var(--body);
+  background:rgba(255,248,232,.07);border:2px solid rgba(255,248,232,.14)}
+.cell small{display:block;font:700 18px var(--body);color:var(--mut);margin-top:4px}
+.cell.y{background:rgba(255,210,122,.16);border-color:rgba(255,210,122,.55)}
+.cell.f{background:rgba(111,211,199,.16);border-color:rgba(111,211,199,.6)}
+.cell.n{color:#6e7398}
+.rowh{position:absolute;left:0;top:0;width:250px;height:150px;display:flex;align-items:center;gap:14px;font:800 26px/1.15 var(--body)}
+.colh{position:absolute;left:0;top:0;width:330px;text-align:center;font:700 38px var(--head);color:var(--warm)}
+.big3{position:absolute;left:0;top:0;width:520px;height:540px;border-radius:30px;padding:40px 36px;background:rgba(21,28,74,.85);border:3px solid}
+.big3 .t{font:700 50px/1.05 var(--head)}
+.big3 .q{font:700 40px/1.2 var(--hand);margin-top:18px}
+.big3 .u{margin-top:26px;font:800 26px/1.5 var(--body);color:var(--mut)}
+.light{color:#1d1a24}
+.light .h1{color:#1d1a24}
+.light .rowh{color:#1d1a24}
+.light .colh{color:#b5532c}
+.light .cell{background:transparent;border:0;box-shadow:none;color:#1d1a24;align-items:center;text-align:center;padding:8px 10px;gap:2px}
+.light .cell svg{display:block}
+.light .cell .cap{font:800 19px var(--body);line-height:1.15}
+.light .cell .cap small{display:inline;font:700 16px var(--body);color:#8a7f72;margin:0}
+.light .cell.n{opacity:.5}
+.light .cell.e{border:2px dashed #e6dcc8}
+@keyframes march{to{stroke-dashoffset:-50}}
+.flow{animation:march 1.1s linear infinite}
+@keyframes wig{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(12deg) translate(2px,2px)}}@keyframes pls{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}@keyframes spn{to{transform:rotate(360deg)}}@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}@keyframes beat{0%{stroke-dashoffset:60}100%{stroke-dashoffset:0}}
+.wig{animation:wig 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:30% 30%}.pulse{animation:pls 1.4s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 50%}.spin{animation:spn 3s linear infinite;transform-box:view-box;transform-origin:50% 50%}.bob{animation:bob 1.5s ease-in-out infinite}.beat{stroke-dasharray:60;animation:beat 1.6s linear infinite}
+.light .big3{background:#fff;box-shadow:0 22px 50px rgba(70,45,20,.12)}
+.light .big3 .u{color:#6b6272}
+.light .paper{box-shadow:0 26px 60px rgba(70,45,20,.18);border:2px solid #efe5d2}
+.hint{position:absolute;right:28px;bottom:14px;z-index:97;font:700 15px var(--body);color:#7d83b0;transition:opacity .6s}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="world"></div>
+  <div id="scenes"></div>
+  <canvas id="grain" width="512" height="288"></canvas><div id="vig"></div>
+  <canvas id="ink" width="1920" height="1080"></canvas><div id="bar"></div>
+  <div class="hint" id="hint">Space ▶ · ← back · F fullscreen · P pen · H highlight · X clear</div>
+</div>
+<script>/*__GSAP__*/</script>
+<script>const D = /*__DATA__*/null;</script>
+<script>
+(() => {
+'use strict';
+const NS = 'http://www.w3.org/2000/svg';
+const C = { n0: '#04061a', n1: '#0B1030', n2: '#151c4a', n3: '#222b66', cream: '#FFF8E8', warm: '#FFD27A', warm2: '#FFB547', red: '#E23B2E', rose: '#FF7363', teal: '#6fd3c7', violet: '#9b7bd1', mut: '#a9afd6' };
+const stage = document.getElementById('stage'), world = document.getElementById('world'), scenes = document.getElementById('scenes');
+const S = (t, a = {}, p) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
+const H = (t, c, p, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; if (p) p.appendChild(e); return e; };
+const T = (p, x, y, txt, a = {}) => { const t = S('text', { x, y, ...a }, p); t.textContent = txt; return t; };
+const rng = (seed = 7) => { let v = seed >>> 0; return () => ((v = (v * 1664525 + 1013904223) >>> 0) / 4294967296); };
+const pct = (v, d = 0) => (v * 100).toFixed(d) + '%', num = v => Math.round(v).toLocaleString('en-US');
+const mon = s => new Date(s + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+const words = (el, html) => { el.innerHTML = html.split(/(<[^>]+>[^<]*<\/[^>]+>|\s+)/).filter(Boolean).map(w => /^\s+$/.test(w) ? ' ' : `<span class="w">${w}</span>`).join(''); return el.querySelectorAll('.w'); };
+const drawPrep = (el) => { el.setAttribute('pathLength', 1); gsap.set(el, { strokeDasharray: 1, strokeDashoffset: 1 }); };
+const E = gsap.parseEase ? 'power3.inOut' : 'power3.inOut';
+const TS = D.tests, P = TS.paired, R = D.redes, SC = D.showcase, HL = D.headline;
+
+/* ---------- paper grain ---------- */
+(() => { const c = document.getElementById('grain'), x = c.getContext('2d'), im = x.createImageData(512, 288); for (let i = 0; i < im.data.length; i += 4) { const v = 128 + (Math.random() - .5) * 90; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; } x.putImageData(im, 0, 0); c.style.width = '1920px'; c.style.height = '1080px'; })();
+
+/* =====================================================================
+   THE WORLD: night sky (top) + city with the restaurant (bottom). Camera = transform on #world.
+   Cover: y = -2160 · sky: y = -1080 · high sky: y = -300
+   ===================================================================== */
+const W = (() => {
+  const svg = S('svg', { width: 1920, height: 3240, viewBox: '0 0 1920 3240' }, world);
+  const defs = S('defs', {}, svg);
+  const lg = S('linearGradient', { id: 'skyg', x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+  [[0, '#03051a'], [.55, '#0b1238'], [.82, '#18205a'], [.93, '#3a2f66'], [1, '#4a3566']].forEach(([o, c]) => S('stop', { offset: o, 'stop-color': c }, lg));
+  const rg = S('radialGradient', { id: 'halo' }, defs); S('stop', { offset: 0, 'stop-color': '#FFD27A', 'stop-opacity': .55 }, rg); S('stop', { offset: 1, 'stop-color': '#FFD27A', 'stop-opacity': 0 }, rg);
+  const rr = S('radialGradient', { id: 'haloR' }, defs); S('stop', { offset: 0, 'stop-color': '#ff6a55', 'stop-opacity': .6 }, rr); S('stop', { offset: 1, 'stop-color': '#ff6a55', 'stop-opacity': 0 }, rr);
+  const rm = S('radialGradient', { id: 'moonh' }, defs); S('stop', { offset: 0, 'stop-color': '#fff6d8', 'stop-opacity': .35 }, rm); S('stop', { offset: 1, 'stop-color': '#fff6d8', 'stop-opacity': 0 }, rm);
+  S('rect', { width: 1920, height: 3240, fill: 'url(#skyg)' }, svg);
+  // stars
+  const r = rng(11), stars = S('g', {}, svg), st = [];
+  for (let i = 0; i < 330; i++) { const y = Math.pow(r(), 1.25) * 2850, c = S('circle', { cx: r() * 1920, cy: y, r: .7 + r() * 1.9, fill: '#fff8e8', opacity: .35 + r() * .6 }, stars); st.push(c); }
+  for (let i = 0; i < 16; i++) { const x = r() * 1920, y = r() * 2500, s = 6 + r() * 9; S('path', { d: `M${x} ${y - s}Q${x} ${y} ${x + s} ${y}Q${x} ${y} ${x} ${y + s}Q${x} ${y} ${x - s} ${y}Q${x} ${y} ${x} ${y - s}Z`, fill: '#fff8e8', opacity: .85 }, stars); }
+  st.forEach(c => gsap.to(c, { opacity: .15 + Math.random() * .3, duration: 1 + Math.random() * 2.5, repeat: -1, yoyo: true, ease: 'sine.inOut', delay: Math.random() * 3 }));
+  // moon
+  S('circle', { cx: 1640, cy: 2300, r: 150, fill: 'url(#moonh)' }, svg); S('circle', { cx: 1640, cy: 2300, r: 50, fill: '#fff4d6' }, svg); S('circle', { cx: 1622, cy: 2316, r: 50, fill: '#1a2257', opacity: .0 }, svg);
+  // constellation layer (filled by the metrics step)
+  const cons = S('g', {}, svg);
+  // ---- city: soft layered night city (atmospheric haze back to front) + the restaurant ----
+  const city = S('g', {}, svg), base = 3090, cr = rng(5);
+  const fs = S('filter', { id: 'soft', x: '-50%', y: '-50%', width: '200%', height: '200%' }, defs); S('feGaussianBlur', { stdDeviation: 7 }, fs);
+  const fw = S('filter', { id: 'winglow', x: '-100%', y: '-100%', width: '300%', height: '300%' }, defs); S('feGaussianBlur', { stdDeviation: 5 }, fw);
+  const bg1 = S('linearGradient', { id: 'brick', x1: 0, y1: 0, x2: 0, y2: 1 }, defs); [[0, '#a64a37'], [1, '#7f3528']].forEach(([o, c]) => S('stop', { offset: o, 'stop-color': c }, bg1));
+  const bg2 = S('linearGradient', { id: 'glass', x1: 0, y1: 0, x2: 0, y2: 1 }, defs); [[0, '#ffe3a1'], [1, '#ffb75a']].forEach(([o, c]) => S('stop', { offset: o, 'stop-color': c }, bg2));
+  const bg3 = S('radialGradient', { id: 'pool', cx: .5, cy: .2, r: .7 }, defs); [[0, '#ffcf7a', .5], [1, '#ffcf7a', 0]].forEach(([o, c, a]) => S('stop', { offset: o, 'stop-color': c, 'stop-opacity': a }, bg3));
+  // soft clouds
+  const clouds = S('g', { opacity: .1 }, city);
+  [[300, 2420, 1], [1250, 2500, .8], [700, 2280, .7]].forEach(([x, y, k]) => { const c = S('path', { d: `M${x} ${y} q40 -46 96 -18 q34 -40 92 -4 q60 -10 66 30 q-10 30 -60 26 h-170 q-48 0 -24 -34z`, fill: '#cfd6ff', transform: `scale(${k})`, 'transform-origin': `${x} ${y}` }, clouds); gsap.to(c, { x: 120, duration: 40 + k * 20, repeat: -1, yoyo: true, ease: 'sine.inOut' }); });
+  const far = S('g', {}, city), mid = S('g', {}, city), glowL = S('g', { filter: 'url(#winglow)', opacity: .8 }, city), front = S('g', {}, city);
+  // far: hazy, rounded tops, no detail
+  for (let x = -40; x < 1960;) { const w = 80 + cr() * 120, h = 160 + cr() * 260; S('rect', { x, y: base - 40 - h, width: w + 4, height: h + 40, rx: 10, fill: '#2b2f6e', opacity: .55 }, far); x += w - 6; }
+  // mid: two flanks, leaving the centre open for the restaurant
+  const lit = []; let diveWin = null;
+  const building = (x, w, h, tone) => { const b = S('g', {}, mid);
+    S('rect', { x, y: base - h, width: w, height: h + 4, rx: 8, fill: tone }, b); S('rect', { x: x + 6, y: base - h - 8, width: w - 12, height: 12, rx: 6, fill: '#2f3a86' }, b);
+    const cols = Math.max(2, Math.floor((w - 24) / 34));
+    for (let wy = base - h + 30; wy < base - 46; wy += 44) for (let c = 0; c < cols; c++) { const wx = x + 14 + c * ((w - 28) / cols) + 2, on = cr() > .5;
+      const win = S('rect', { x: wx, y: wy, width: 20, height: 26, rx: 4, fill: on ? 'url(#glass)' : '#2e3880' }, b);
+      if (on) { lit.push(win); S('rect', { x: wx - 2, y: wy - 2, width: 24, height: 30, rx: 6, fill: '#ffc46b' }, glowL); if (!diveWin && x > 1500 && wy > base - 300) diveWin = { x: wx + 10, y: wy + 13 }; } }
+    return b; };
+  for (let x = -20; x < 470;) { const w = 120 + cr() * 90, h = 260 + cr() * 300; building(x, w, h, cr() > .5 ? '#1f2866' : '#252f74'); x += w + 10; }
+  for (let x = 1450; x < 1960;) { const w = 120 + cr() * 90, h = 260 + cr() * 300; building(x, w, h, cr() > .5 ? '#1f2866' : '#252f74'); x += w + 10; }
+  // ---- the restaurant: central gabled entrance, brick wings, stone base ----
+  const rest = S('g', {}, front), L0 = 520, R0 = 1400, wingTop = base - 270, towerL = 800, towerR = 1120, towerTop = base - 380, peak = base - 520;
+  S('ellipse', { cx: 960, cy: base - 120, rx: 760, ry: 330, fill: 'url(#halo)', opacity: .8 }, rest);
+  // wings
+  [[L0, towerL], [towerR, R0]].forEach(([a, b]) => {
+    S('rect', { x: a, y: wingTop, width: b - a, height: 270, rx: 6, fill: 'url(#brick)' }, rest);
+    S('rect', { x: a - 10, y: wingTop - 18, width: b - a + 20, height: 26, rx: 8, fill: '#5b2a22' }, rest);
+    for (let x = a + 8; x < b - 8; x += 26) S('rect', { x, y: wingTop + 10, width: 14, height: 9, rx: 2, fill: '#6f3329' }, rest);
+    for (let y = wingTop + 44; y < base - 50; y += 22) S('line', { x1: a + 4, x2: b - 4, y1: y, y2: y, stroke: '#8a3a2d', 'stroke-width': 2, opacity: .6 }, rest);
+    [0, 1].forEach(i => { const ww = 96, wx = a + (b - a) * (i ? .66 : .34) - ww / 2, wy = wingTop + 70;
+      S('rect', { x: wx - 8, y: wy - 8, width: ww + 16, height: 136, rx: 10, fill: '#5b2a22' }, rest);
+      S('rect', { x: wx, y: wy, width: ww, height: 120, rx: 6, fill: 'url(#glass)' }, rest);
+      S('path', { d: `M${wx + ww / 2} ${wy}v120M${wx} ${wy + 60}h${ww}`, stroke: '#7f3528', 'stroke-width': 5 }, rest);
+      S('path', { d: `M${wx - 14} ${wy - 10} h${ww + 28} l-10 30 h-${ww + 8} z`, fill: '#3a1d1a' }, rest); });
+  });
+  // tower + gable
+  S('rect', { x: towerL, y: towerTop, width: towerR - towerL, height: 380, rx: 6, fill: 'url(#brick)' }, rest);
+  S('path', { d: `M${towerL - 34} ${towerTop + 6} L960 ${peak} L${towerR + 34} ${towerTop + 6} Z`, fill: '#3b2421', stroke: '#2a1816', 'stroke-width': 8, 'stroke-linejoin': 'round' }, rest);
+  S('path', { d: `M${towerL + 10} ${towerTop - 8} L960 ${peak + 46} L${towerR - 10} ${towerTop - 8} Z`, fill: '#4a2c28' }, rest);
+  S('circle', { cx: 960, cy: peak + 80, r: 18, fill: '#ffd27a', opacity: .9 }, rest);
+  // sign panel under the gable
+  const sign = S('g', {}, rest); S('rect', { x: towerL - 24, y: towerTop + 22, width: towerR - towerL + 48, height: 104, rx: 18, fill: '#140c0d', stroke: '#3a1d1a', 'stroke-width': 4 }, sign);
+  S('circle', { cx: towerL + 26, cy: towerTop + 76, r: 24, fill: C.red }, sign); S('path', { d: `M${towerL + 26} ${towerTop + 52} q10 -18 26 -14 q-8 14 -26 14z`, fill: '#5fae5b' }, sign);
+  const st1 = T(sign, 998, towerTop + 92, "Applebee's", { 'text-anchor': 'middle', 'font-family': 'Fraunces', 'font-weight': 700, 'font-size': 52, textLength: 262, lengthAdjust: 'spacingAndGlyphs', fill: '#fff' }); st1.style.filter = 'drop-shadow(0 0 12px rgba(255,90,70,.85))';
+  // entrance: "Welcome back" plate, doors, sconces
+  S('rect', { x: 880, y: towerTop + 150, width: 160, height: 30, rx: 8, fill: '#2a1816' }, rest); T(rest, 960, towerTop + 172, 'Welcome Back!', { 'text-anchor': 'middle', 'font-family': 'Caveat', 'font-weight': 700, 'font-size': 24, fill: '#ffe2b0' });
+  S('path', { d: `M880 ${base} V${towerTop + 238} q80 -52 160 0 V${base} Z`, fill: '#5b2a22' }, rest);
+  S('path', { d: `M894 ${base} V${towerTop + 246} q66 -40 132 0 V${base} Z`, fill: 'url(#glass)' }, rest);
+  S('path', { d: `M960 ${towerTop + 222}V${base}`, stroke: '#7f3528', 'stroke-width': 5 }, rest);
+  [[946, 1], [974, 1]].forEach(([x]) => S('rect', { x: x - 3, y: base - 120, width: 6, height: 50, rx: 3, fill: '#c98d4a' }, rest));
+  [850, 1070].forEach(x => { S('circle', { cx: x, cy: towerTop + 230, r: 70, fill: 'url(#halo)' }, rest); S('rect', { x: x - 9, y: towerTop + 218, width: 18, height: 28, rx: 6, fill: '#ffe6a6' }, rest); });
+  // stone base
+  S('rect', { x: L0 - 6, y: base - 34, width: R0 - L0 + 12, height: 34, rx: 4, fill: '#6b5a58' }, rest);
+  for (let x = L0; x < R0; x += 58) { if (x > 878 && x < 1040) continue; S('line', { x1: x, x2: x, y1: base - 34, y2: base, stroke: '#57484a', 'stroke-width': 3 }, rest); }
+  // bushes, lamps, trees
+  [[560, 46], [640, 40], [1280, 40], [1360, 46], [860, 30], [1060, 30]].forEach(([x, rr]) => { S('ellipse', { cx: x, cy: base - 12, rx: rr * 1.4, ry: rr * .8, fill: '#244f45' }, front); S('ellipse', { cx: x - rr * .4, cy: base - 22, rx: rr * .7, ry: rr * .5, fill: '#2f6355' }, front); });
+  [[430, 64], [1490, 64]].forEach(([x, rr]) => { S('rect', { x: x - 7, y: base - 80, width: 14, height: 80, rx: 4, fill: '#1b1f3e' }, front); S('circle', { cx: x, cy: base - 120, r: rr, fill: '#1f4a43' }, front); S('circle', { cx: x - 22, cy: base - 140, r: rr * .55, fill: '#2a5d52' }, front); });
+  [480, 1440].forEach(x => { S('circle', { cx: x, cy: base - 210, r: 110, fill: 'url(#halo)' }, front); S('rect', { x: x - 4, y: base - 210, width: 8, height: 210, rx: 3, fill: '#1b1f3e' }, front); S('path', { d: `M${x - 18} ${base - 214} h36 l-6 -18 h-24z`, fill: '#2a2f5e' }, front); S('circle', { cx: x, cy: base - 206, r: 10, fill: '#ffe6a6' }, front); });
+  // street with a warm reflection
+  S('rect', { x: 0, y: base, width: 1920, height: 34, fill: '#2c3164' }, front); S('rect', { x: 0, y: base + 34, width: 1920, height: 130, fill: '#11163b' }, front);
+  S('ellipse', { cx: 960, cy: base + 70, rx: 520, ry: 70, fill: 'url(#pool)' }, front);
+  for (let x = 20; x < 1920; x += 100) S('rect', { x, y: base + 150, width: 56, height: 6, rx: 3, fill: '#d8d0b4', opacity: .3 }, front);
+  // a lit window on the right flank to dive into
+  const dive = diveWin || { x: 1600, y: 2900 };
+  return { svg, cons, lit, sign: st1, mid, rest, dive, far };
+})();
+const cam = (y, s = 1, ox = 960, oy = 0) => ({ y, scale: s, transformOrigin: `${ox}px ${oy}px` });
+
+/* =====================================================================
+   SCENE ENGINE
+   ===================================================================== */
+const SCN = [];
+const scene = o => { o.el = H('section', 'sc', scenes); o.build && o.build(o.el); SCN.push(o); };
+
+/* scope helpers: a column comes in (card, icons, words); the existing columns re-flow to a layout of n */
+const scopeIn = (tl, e, j, t) => { const [x, w] = e.LAY[j + 1][j];
+  tl.fromTo(e.cards[j], { autoAlpha: 0, scale: .9, y: 340, x, width: w }, { autoAlpha: 1, scale: 1, y: 300, duration: .7, ease: 'back.out(1.5)' }, t);
+  e.fly.forEach((f, i) => { if (e.KG[i] !== j) return; const tt = t + .35 + e.SLOT[i] * .14;
+    tl.fromTo(e.icw[i], { autoAlpha: 0, scale: .4 }, { autoAlpha: 1, scale: 1, duration: .45, ease: 'back.out(2.2)' }, tt)
+      .fromTo(f, { autoAlpha: 0, x: x + 34 + 40 }, { autoAlpha: 1, x: x + 34 + 60, duration: .45 }, tt + .08); }); };
+const scopeLayout = (tl, e, n, t) => { for (let j = 0; j < n - 1; j++) { const [x, w] = e.LAY[n][j];
+  tl.to(e.cards[j], { x, width: w, duration: .8, ease: E }, t);
+  e.fly.forEach((f, i) => { if (e.KG[i] === j) tl.to(f, { x: x + 34 + 60, duration: .8, ease: E }, t).to(e.icw[i], { x: x + 34, duration: .8, ease: E }, t); }); } };
+/* ---------- 1 · COVER → QUESTION → SCOPE → METRICS (one continuous sky) ---------- */
+scene({ world: true, build(r) {
+  const e = this.e = {};
+  e.top = H('div', 'a', r, `<div class="eb" style="text-align:center;letter-spacing:.4em">Phase 3</div><div class="glow" style="text-align:center;font:700 72px/1.05 var(--head);color:var(--warm);margin-top:12px">Applebee's Fraud Detection</div><div class="h1" style="text-align:center;font-size:88px;margin-top:6px;color:var(--cream)">Proposed Solution</div>`); e.top.style.width = '1920px';
+  e.names = H('div', 'a', r, `<div style="text-align:center;font:800 22px var(--body);letter-spacing:.26em;color:var(--warm)">TEAM STACK OVERFLOW</div>
+    <div style="text-align:center;font:700 26px var(--body);margin-top:10px">Luis Ernesto Colunga Lozano · Mateo Rodolfo Flores Torres · Miguel Angel Villafuerte Villarreal</div>`); e.names.style.width = '1920px';
+  // logos: a full-height bar on the right with the logos stacked vertically
+  e.logos = H('div', 'a', r, `<div style="width:170px;height:1080px;display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;padding:60px 0;background:linear-gradient(180deg,rgba(4,6,26,.72),rgba(11,16,48,.62));border-left:2px solid rgba(255,210,122,.4);backdrop-filter:blur(3px)"><img src="__LOGO_sun__" style="width:132px;display:block"><img src="__LOGO_dbx__" style="height:74px;display:block"><img src="__LOGO_tec__" style="height:84px;display:block"></div>`);
+  // scope first: three columns (objective · who · compared against); then their colored words fly into the business question
+  const KC = ['#FF7363', '#FFD27A', '#6fd3c7'], KG = [0, 0, 0, 1, 1, 2, 2];
+  const KW = ['detect', 'prevent', 'diagnose', 'store employees', 'managers', 'themselves over time', 'other employees'];
+  e.seb = H('div', 'a eb', r, 'Scope'); e.qeb = H('div', 'a eb', r, 'Business question');
+  e.q = H('div', 'a h1', r); e.q.style.cssText += 'width:1720px;text-align:center;font-size:76px;line-height:1.45';
+  const K = i => `<span class="k" data-k="${i}" style="color:${KC[KG[i]]}">${KW[i]}</span>`;
+  e.qw = words(e.q, `How can Sun Holdings ${K(0)}, ${K(1)} and ${K(2)} discount fraud by comparing ${K(3)} and ${K(4)} against ${K(5)} and against ${K(6)}?`);
+  e.kq = KW.map((_, i) => e.q.querySelector(`.k[data-k="${i}"]`)); e.kw = e.kq.map(k => k.parentElement);
+  e.white = [...e.qw].filter(w => !w.querySelector('.k'));
+  // shooting stars (decoration)
+  const shoot = () => { const d = H('div', 'a', r, '<svg width="320" height="8" viewBox="0 0 320 8"><defs><linearGradient id="sg' + Math.random().toString(36).slice(2, 6) + '" x1="0" x2="1"><stop offset="0" stop-color="#FFF8E8" stop-opacity="0"/><stop offset="1" stop-color="#FFF8E8"/></linearGradient></defs><rect width="320" height="3" y="2.5" rx="1.5"/><circle cx="316" cy="4" r="4" fill="#FFF8E8"/></svg>');
+    const rect = d.querySelector('rect'); rect.setAttribute('fill', `url(#${d.querySelector('linearGradient').id})`); d.style.transformOrigin = '100% 50%'; return d; };
+  e.shoot = [shoot(), shoot()];
+  // scope cards: white cards, dark tones of each color; they come in one by one (center → halves → thirds)
+  const KD = ['#c23b2c', '#a8700f', '#17837a'];
+  const LAY = { 1: [[560, 800]], 2: [[160, 770], [990, 770]], 3: [[75, 570], [675, 570], [1275, 570]] };
+  e.LAY = LAY; e.KD = KD; e.KC = KC; e.KG = KG;
+  const big = {
+    goal: c => `<svg width="64" height="64" viewBox="0 0 64 64"><circle cx="27" cy="27" r="17" fill="none" stroke="${c}" stroke-width="5"/><path d="M39 39 L56 56" stroke="${c}" stroke-width="7" stroke-linecap="round"/><path d="M19 28 l6 6 l11 -13" stroke="${c}" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    who: c => `<svg width="70" height="64" viewBox="0 0 70 64"><circle cx="22" cy="17" r="10" fill="${c}"/><path d="M5 58 Q5 33 22 33 Q39 33 39 58Z" fill="${c}"/><circle cx="50" cy="17" r="10" fill="${c}" opacity=".6"/><path d="M33 58 Q33 33 50 33 Q67 33 67 58Z" fill="${c}" opacity=".6"/></svg>`,
+    how: c => `<svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="24" fill="none" stroke="${c}" stroke-width="5"/><path class="spin" d="M32 16 V32 L43 39" stroke="${c}" stroke-width="5" stroke-linecap="round" fill="none"/></svg>` };
+  e.cards = [['Objective', big.goal, `<div class="foot" style="position:absolute;left:34px;right:34px;bottom:30px;font:700 26px/1.35 var(--body);color:#7a7086">fraud in <b style="color:${KD[0]}">discount programs</b></div>`],
+    ['Who?', big.who, ''], ['Compared against', big.how, '']]
+    .map(([k, i, extra], j) => { const d = H('div', 'card', r, `<div style="float:right">${i(KD[j])}</div><div class="k" style="color:${KD[j]};font-size:22px">${k}</div>${extra}`);
+      d.style.cssText += `height:430px;background:#FFF8E8;border:3px solid ${KD[j]};box-shadow:0 26px 60px rgba(0,0,0,.35);backdrop-filter:none`; return d; });
+  // one small animated icon per word
+  const W2 = 'stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"';
+  const ICW = [
+    c => `<svg width="48" height="48" viewBox="0 0 48 48"><g class="wig"><circle cx="20" cy="20" r="12" stroke="${c}" ${W2}/><path d="M29 29 L42 42" stroke="${c}" stroke-width="6" stroke-linecap="round"/></g></svg>`,
+    c => `<svg width="48" height="48" viewBox="0 0 48 48"><path class="pulse" d="M24 4 L41 10 V23 C41 34 33 41 24 44 C15 41 7 34 7 23 V10 Z" stroke="${c}" ${W2}/><path d="M16 24 l6 6 l11 -12" stroke="${c}" ${W2}/></svg>`,
+    c => `<svg width="48" height="48" viewBox="0 0 48 48"><rect x="6" y="8" width="36" height="32" rx="6" stroke="${c}" ${W2}/><path class="beat" d="M10 26 h8 l4 -9 l5 16 l4 -7 h7" stroke="${c}" ${W2}/></svg>`,
+    c => `<svg width="48" height="48" viewBox="0 0 48 48"><g class="bob"><circle cx="24" cy="12" r="7" fill="${c}"/><path d="M10 44 Q10 22 24 22 Q38 22 38 44Z" fill="${c}"/><path d="M16 30 h16 v14 h-16z" fill="#FFF8E8" opacity=".85"/></g></svg>`,
+    c => `<svg width="48" height="48" viewBox="0 0 48 48"><g class="bob"><circle cx="24" cy="12" r="7" fill="${c}"/><path d="M10 44 Q10 22 24 22 Q38 22 38 44Z" fill="${c}"/><path d="M24 23 l-4 5 l4 14 l4 -14z" fill="#FFF8E8"/></g></svg>`,
+    c => `<svg width="48" height="48" viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" stroke="${c}" ${W2}/><path class="spin" d="M24 12 V24 L32 29" stroke="${c}" ${W2}/><path d="M40 8 l2 9 l-9 -2" stroke="${c}" ${W2}/></svg>`,
+    c => `<svg width="56" height="48" viewBox="0 0 56 48"><g class="bob"><circle cx="16" cy="14" r="6" fill="${c}" opacity=".55"/><path d="M5 44 Q5 25 16 25 Q27 25 27 44Z" fill="${c}" opacity=".55"/></g><circle cx="40" cy="14" r="6" fill="${c}" opacity=".55"/><path d="M29 44 Q29 25 40 25 Q51 25 51 44Z" fill="${c}" opacity=".55"/><circle cx="28" cy="18" r="7" fill="${c}"/><path d="M15 48 Q15 28 28 28 Q41 28 41 48Z" fill="${c}"/></svg>`];
+  const SLOT = [0, 1, 2, 0, 1, 0, 1], CY = 300; e.SLOT = SLOT;
+  e.icw = KW.map((_, i) => H('div', 'a', r, ICW[i](KD[KG[i]])));
+  // the words that fly: they sit in their column first (dark tone on white), and take the light color in the sky
+  e.fly = KW.map((w, i) => { const d = H('div', 'a h1', r, w); d.style.cssText += `font-size:76px;line-height:normal;white-space:nowrap;color:${KD[KG[i]]}`; return d; });
+  e.slotY = i => CY + 112 + SLOT[i] * 72;
+  e.flyCol = KG;
+  // metrics: two panels; every metric is a gauge, fraud pushes it into the "high" zone
+  e.meb = H('div', 'a eb', r, 'Metrics'); e.mh = H('div', 'a h2', r, 'Fraud shows up as <span style="color:#FF7363">high</span> metrics');
+  const EMP = ['Discount ratio', 'Frequency', 'Cash or no tip', 'Card tip', 'Card, no tip', 'Full comps', 'Discount + void', 'Voids'];
+  const MGR = ['Approval ratio', 'Self-approval', 'Concentration', 'Approved voids', 'Vs. peers'];
+  const HOT = { 'Cash or no tip': 1, 'Full comps': 1, 'Voids': 1, 'Card, no tip': 1, 'Approved voids': 1, 'Discount ratio': 1, 'Approval ratio': 1 };
+  const TW = 330, rr = rng(23);
+  const panel = (list, title, col) => { const p = H('div', 'a card', r); p.style.cssText += `width:780px;padding:26px 34px 22px;border-color:${col}55`;
+    H('div', '', p, `<div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font:700 44px var(--head);color:${col}">${title}</span><span style="font:800 18px var(--body);letter-spacing:.2em;color:var(--mut)">${list.length} METRICS</span></div>`);
+    const rows = list.map((n, i) => { const row = H('div', '', p); row.style.cssText = 'display:flex;align-items:center;height:62px;border-top:1px solid rgba(255,248,232,.1)';
+      row.innerHTML = `<div class="nm" style="width:330px;font:800 26px var(--body);color:${col}">${n}</div><div class="tr" style="position:relative;width:${TW}px;height:14px;border-radius:7px;background:rgba(255,248,232,.1)"><div class="hz" style="position:absolute;right:0;top:-6px;bottom:-6px;width:30%;border-radius:0 9px 9px 0;background:rgba(255,115,99,.0);border-left:2px dashed rgba(255,115,99,.0)"></div><div class="fl" style="position:absolute;left:0;top:0;height:14px;border-radius:7px;background:${col};opacity:.55;width:0"></div><div class="mk" style="position:absolute;left:-12px;top:-5px;width:24px;height:24px;border-radius:50%;background:${col};box-shadow:0 0 0 0 rgba(255,115,99,0)"></div></div>`;
+      return { row, col, hot: !!HOT[n], nm: row.querySelector('.nm'), fl: row.querySelector('.fl'), mk: row.querySelector('.mk'), hz: row.querySelector('.hz'), v0: .22 + rr() * .3 }; });
+    const hl = H('div', '', p, '<div style="display:flex;justify-content:flex-end;padding-top:8px;font:800 16px var(--body);letter-spacing:.2em;color:#FF7363;opacity:0" class="hl">HIGH ZONE ▲</div>');
+    return { p, rows, hl: p.querySelector('.hl'), TW }; };
+  e.pE = panel(EMP, 'Employees', C.warm); e.pM = panel(MGR, 'Managers', C.teal);
+  this.e = e;
+}, reset() {
+  const e = this.e, KG2 = i => e.LAY[e.KG[i] + 1][e.KG[i]]; gsap.set(world, { autoAlpha: 1, ...cam(-2160) }); gsap.set(W.cons, { autoAlpha: 1 });
+  gsap.set([e.top, e.names, e.logos, e.qeb, e.seb, e.meb, e.mh, ...e.cards, ...e.shoot, ...e.fly], { autoAlpha: 0 });
+  gsap.set(e.top, { x: 0, y: 56 }); gsap.set(e.names, { x: 0, y: 966 }); gsap.set(e.logos, { x: 1750, y: 0 });
+  gsap.set(e.seb, { x: 960, y: 200, xPercent: -50 }); gsap.set(e.qeb, { x: 960, y: 250, xPercent: -50 });
+  gsap.set(e.q, { x: 100, y: 330, autoAlpha: 1, scale: 1, transformOrigin: '50% 0' }); gsap.set(e.qw, { autoAlpha: 0, y: 30 }); gsap.set(e.kw, { autoAlpha: 1, y: 0 }); gsap.set(e.kq, { autoAlpha: 0 });
+  e.fly.forEach((f, i) => { const c = KG2(i); gsap.set(f, { x: c[0] + 34 + 60, y: e.slotY(i), scale: .5, transformOrigin: '0 0', color: e.KD[e.KG[i]] }); gsap.set(e.icw[i], { x: c[0] + 34, y: e.slotY(i) + 2, autoAlpha: 0, scale: 1 }); });
+  e.shoot.forEach(s => gsap.set(s, { x: 1500, y: 120, rotation: 158, scale: 1 }));
+  e.cards.forEach((c, j) => { const [x, w] = e.LAY[j + 1][j]; gsap.set(c, { x, width: w, y: 340, scale: .95 }); });
+  gsap.set(e.meb, { x: 960, y: 70, xPercent: -50 }); gsap.set(e.mh, { x: 960, y: 110, xPercent: -50 });
+  [[e.pE, 140], [e.pM, 1000]].forEach(([pn, x]) => { gsap.set(pn.p, { x, y: 240, autoAlpha: 0 }); gsap.set(pn.hl, { opacity: 0 });
+    pn.rows.forEach(o => { gsap.set(o.row, { autoAlpha: 0, x: -30 }); gsap.set(o.nm, { opacity: 1, color: o.col }); gsap.set(o.fl, { width: 0, background: o.col }); gsap.set(o.mk, { x: 0, background: o.col, boxShadow: '0 0 0 0 rgba(255,115,99,0)' }); gsap.set(o.hz, { background: 'rgba(255,115,99,0)', borderLeftColor: 'rgba(255,115,99,0)' }); }); });
+  gsap.set(W.mid.children, { scaleY: 1, transformOrigin: '50% 100%' }); gsap.set(W.lit, { opacity: 1 });
+}, steps: [
+  function cover(tl) { const e = this.e;
+    tl.from(W.far, { y: 260, duration: 1.4, ease: 'power3.out' }, 0)
+      .from(W.mid.children, { scaleY: 0, transformOrigin: '50% 100%', duration: .9, stagger: .025, ease: 'back.out(1.4)' }, .2)
+      .from(W.rest, { y: 340, duration: 1.1, ease: 'back.out(1.2)' }, .6)
+      .from(W.lit, { opacity: 0, duration: .05, stagger: { each: .006, from: 'random' } }, 1.2)
+      .fromTo(W.sign, { opacity: 0 }, { opacity: 1, duration: .08, repeat: 5, yoyo: true }, 1.6)
+      .to(W.sign, { opacity: 1, duration: .1 }, 2.1)
+      .to(e.top, { autoAlpha: 1, y: 46, duration: 1 }, 1.8).to(e.names, { autoAlpha: 1, duration: 1 }, 2.2).fromTo(e.logos, { autoAlpha: 0, x: 1920 }, { autoAlpha: 1, x: 1750, duration: 1, ease: 'power3.out' }, 2.3); },
+  function sky(tl) { const e = this.e;
+    // the camera rises; the first column (objective) comes in, alone and centered
+    tl.to([e.top, e.names], { autoAlpha: 0, y: '+=40', duration: .6 }, 0).to(e.logos, { autoAlpha: 0, x: 1920, duration: .6 }, 0)
+      .to(world, { y: -1080, duration: 2.6, ease: 'power2.inOut' }, .2)
+      .fromTo(e.shoot[0], { autoAlpha: 0, x: 1650, y: 90 }, { autoAlpha: 1, x: 1150, y: 280, duration: .5, ease: 'power1.in' }, 2.0).to(e.shoot[0], { autoAlpha: 0, duration: .35 }, 2.5)
+      .to(e.seb, { autoAlpha: 1, duration: .6 }, 2.2);
+    scopeIn(tl, e, 0, 2.5); },
+  function who(tl) { const e = this.e; scopeLayout(tl, e, 2, 0); scopeIn(tl, e, 1, .45); },
+  function against(tl) { const e = this.e; scopeLayout(tl, e, 3, 0); scopeIn(tl, e, 2, .45); },
+  function question(tl) { const e = this.e;
+    // the colored words travel across the screen to their place in the question; then the white words fill it in
+    tl.to(e.seb, { autoAlpha: 0, duration: .4 }, 0).to(e.cards, { autoAlpha: 0, scale: .96, duration: .6, stagger: .06 }, .15).to(e.icw, { autoAlpha: 0, scale: .6, duration: .4, stagger: .03 }, 0);
+    const sc = stage.getBoundingClientRect().width / 1920, qr = e.q.getBoundingClientRect();
+    e.fly.forEach((f, i) => { const k = e.kq[i], kr = k.getBoundingClientRect(), x = 100 + (kr.left - qr.left) / sc, y = 330 + (kr.top - qr.top) / sc, t = .25 + i * .08;
+      tl.to(f, { x, y, scale: 1, color: e.KC[e.KG[i]], duration: 1.3, ease: 'power3.inOut' }, t).to(k, { autoAlpha: 1, duration: .25 }, t + 1.25).to(f, { autoAlpha: 0, duration: .25 }, t + 1.3); });
+    tl.to(e.qeb, { autoAlpha: 1, duration: .5 }, 1.9).to(e.white, { autoAlpha: 1, y: 0, duration: .45, stagger: .055, ease: 'power2.out' }, 2.1)
+      .fromTo(e.shoot[1], { autoAlpha: 0, x: 600, y: 60 }, { autoAlpha: .8, x: 150, y: 230, duration: .55, ease: 'power1.in' }, 3.6).to(e.shoot[1], { autoAlpha: 0, duration: .35 }, 4.15); },
+  function metrics(tl) { const e = this.e;
+    // question and cards lift away; two panels of gauges come in, every gauge at a normal level
+    tl.to(e.cards, { autoAlpha: 0, y: '-=80', duration: .6, stagger: .08, ease: 'power2.in' }, 0).to([e.qeb, e.q], { autoAlpha: 0, y: '-=60', duration: .6 }, 0)
+      .to(e.meb, { autoAlpha: 1, duration: .5 }, .6);
+    [e.pE, e.pM].forEach((pn, k) => { const t0 = .7 + k * .35;
+      tl.fromTo(pn.p, { autoAlpha: 0, y: 300 }, { autoAlpha: 1, y: 240, duration: .7, ease: 'power3.out' }, t0);
+      pn.rows.forEach((o, i) => { const t = t0 + .3 + i * .09;
+        tl.to(o.row, { autoAlpha: 1, x: 0, duration: .4 }, t).to(o.fl, { width: o.v0 * pn.TW, duration: .7, ease: 'power2.out' }, t + .15).to(o.mk, { x: o.v0 * pn.TW, duration: .7, ease: 'power2.out' }, t + .15); }); }); },
+  function high(tl) { const e = this.e;
+    tl.to(e.meb, { autoAlpha: 0, duration: .4 }, 0).to(e.mh, { autoAlpha: 1, y: 90, duration: .7 }, .1);
+    [e.pE, e.pM].forEach(pn => { tl.to(pn.rows.map(o => o.hz), { background: 'rgba(255,115,99,.16)', borderLeftColor: 'rgba(255,115,99,.7)', duration: .5 }, .4).to(pn.hl, { opacity: 1, duration: .5 }, .5);
+      pn.rows.forEach((o, i) => { const t = .8 + i * .08;
+        if (o.hot) { const v = (.84 + (i % 3) * .05) * pn.TW;
+          tl.to(o.fl, { width: v, background: C.rose, duration: .8, ease: 'power3.inOut' }, t).to(o.mk, { x: v, background: C.rose, duration: .8, ease: 'power3.inOut' }, t).to(o.nm, { color: C.rose, duration: .4 }, t + .3)
+            .to(o.mk, { boxShadow: '0 0 0 12px rgba(255,115,99,.25)', repeat: 3, yoyo: true, duration: .6, ease: 'sine.inOut' }, 1.8);
+        } else tl.to(o.row, { opacity: .35, duration: .5 }, .6); }); }); },
+] });
+
+/* ---------- 2 · INFERENTIAL ANALYSIS (inside the restaurant: coins in jars → confidence intervals) ---------- */
+const INKP = '#2B2A33';
+/* storybook person (ink outline + watercolor fill), origin at the feet */
+const person = (p, { x = 0, y = 0, s = 1, shirt = '#6FA3CF', pants = '#5E6B7D', hair = '#3A2E2A', apron = null, tie = null, flip = false } = {}) => {
+  const o = a => ({ stroke: INKP, 'stroke-width': 3, 'stroke-linejoin': 'round', 'stroke-linecap': 'round', ...a });
+  const g = S('g', { transform: `translate(${x} ${y}) scale(${flip ? -s : s} ${s})` }, p);
+  const legH = 128, torsoH = 112, R = 31, sw = 35, hw = 27, armL = 100, legW = 15, hipY = -legH, shY = hipY - torsoH, headY = shY - R * .95, skin = '#F3D2B3';
+  [-1, 1].forEach(k => { const lx = k * hw * .5; S('rect', o({ x: lx - legW * .6, y: hipY - 4, width: legW * 1.2, height: legH, rx: legW * .5, fill: pants }), g); S('ellipse', o({ cx: lx + k * 4, cy: -3, rx: legW * 1.05, ry: legW * .6, fill: INKP }), g); });
+  S('path', o({ d: `M${-sw * .8},${shY + 6} Q0,${shY - 6} ${sw * .8},${shY + 6} L${hw},${hipY + 4} Q0,${hipY + 10} ${-hw},${hipY + 4} Z`, fill: shirt }), g);
+  if (apron) S('path', o({ d: `M${-hw * .75},${shY + 44} H${hw * .75} L${hw * .9},${hipY + 30} Q0,${hipY + 38} ${-hw * .9},${hipY + 30} Z`, fill: apron, 'stroke-width': 2.5 }), g);
+  if (tie) S('path', o({ d: `M0 ${shY + 6} l-6 9 l6 44 l6 -44 z`, fill: tie, 'stroke-width': 2 }), g);
+  const arms = [-1, 1].map(k => { const ag = S('g', {}, g), ax = k * sw * .78, ay = shY + 8;
+    S('path', { d: `M${ax},${ay} L${ax + k * 6},${ay + armL}`, fill: 'none', stroke: INKP, 'stroke-width': 15, 'stroke-linecap': 'round' }, ag);
+    S('path', { d: `M${ax},${ay} L${ax + k * 6},${ay + armL}`, fill: 'none', stroke: shirt, 'stroke-width': 10, 'stroke-linecap': 'round' }, ag);
+    S('circle', o({ cx: ax + k * 6, cy: ay + 4 + armL, r: 7.5, fill: skin, 'stroke-width': 2.5 }), ag);
+    return { g: ag, px: ax, py: ay, hx: ax + k * 6, hy: ay + 4 + armL }; });
+  S('rect', o({ x: -6, y: shY - 12, width: 12, height: 16, fill: skin, 'stroke-width': 2.5 }), g);
+  S('circle', o({ cx: 0, cy: headY, r: R, fill: skin }), g);
+  S('path', o({ d: `M${-R * 1.02},${headY + 2} Q${-R * 1.1},${headY - R * 1.15} 0,${headY - R * 1.08} Q${R * 1.1},${headY - R * 1.15} ${R * 1.02},${headY + 2} Q${R * .7},${headY - R * .45} ${R * .1},${headY - R * .5} Q${-R * .3},${headY - R * .25} ${-R * .75},${headY - R * .45} Q${-R * .95},${headY - R * .2} ${-R * 1.02},${headY + 2} Z`, fill: hair }), g);
+  [-1, 1].forEach(k => { S('circle', { cx: k * R * .33, cy: headY + R * .05, r: R * .085, fill: INKP }, g); S('circle', { cx: k * R * .55, cy: headY + R * .38, r: R * .16, fill: '#E89A8E', opacity: .45 }, g); });
+  S('path', { d: `M${-R * .28},${headY + R * .5 - 3} Q0,${headY + R * .5 + R * .32} ${R * .28},${headY + R * .5 - 3}`, fill: 'none', stroke: INKP, 'stroke-width': 2.6, 'stroke-linecap': 'round' }, g);
+  const sx = flip ? -s : s;
+  const rot = (k, a) => arms[k].g.setAttribute('transform', `rotate(${a} ${arms[k].px} ${arms[k].py})`);
+  const hand = (k, a) => { const A = arms[k], r0 = a * Math.PI / 180, dx = A.hx - A.px, dy = A.hy - A.py, lx = A.px + dx * Math.cos(r0) - dy * Math.sin(r0), ly = A.py + dx * Math.sin(r0) + dy * Math.cos(r0); return [x + lx * sx, y + ly * s]; };
+  return { g, rot, hand };
+};
+/* a glass jar that fills with coins; v = share of checks (0..1) */
+const coinJar = (p, cx, top, w, h, coin, label, sub) => {
+  const g = S('g', {}, p), x0 = cx - w / 2, cols = Math.floor((w - 24) / 44), rows = Math.floor((h - 40) / 13);
+  S('rect', { x: cx - w * .2, y: top - 26, width: w * .4, height: 28, rx: 7, fill: '#c99a52', stroke: INKP, 'stroke-width': 3 }, g);
+  const body = `M${x0 + w * .16} ${top} h${w * .68} v14 q${w * .16} 8 ${w * .16} 40 v${h - 76} q0 22 -22 22 h-${w - 44} q-22 0 -22 -22 v-${h - 76} q0 -32 ${w * .16} -40 z`;
+  const glass = S('path', { d: body, fill: 'rgba(191,215,234,.28)', stroke: INKP, 'stroke-width': 3.5, 'stroke-linejoin': 'round' }, g);
+  const coins = S('g', {}, g);
+  const shine = S('path', { d: `M${x0 + 22} ${top + 70} v${h - 130}`, stroke: '#fff', 'stroke-width': 8, 'stroke-linecap': 'round', opacity: .55 }, g);
+  const val = T(g, cx, top - 50, '0%', { 'text-anchor': 'middle', 'font-family': 'Fraunces', 'font-weight': 700, 'font-size': 56, fill: INKP });
+  T(g, cx, top + h + 44, label, { 'text-anchor': 'middle', 'font-family': 'Fraunces', 'font-weight': 700, 'font-size': 30, fill: INKP });
+  if (sub) T(g, cx, top + h + 76, sub, { 'text-anchor': 'middle', 'font-size': 20, 'font-weight': 800, fill: '#7a7086' });
+  const slot = n => { const r = Math.floor(n / cols), c = n % cols, off = r % 2 ? 22 : 0; return [x0 + 34 + off + c * ((w - 68 - 22) / Math.max(1, cols - 1)), top + h - 16 - r * 13]; };
+  const fillH = v => Math.round(v * rows) * 13;
+  const bar = S('rect', { x: x0 + 20, y: top + h - 4, width: w - 40, height: 0, rx: 10, fill: coin === 'gold' ? '#E8B23A' : '#AEB4C4', stroke: INKP, 'stroke-width': 3, opacity: 0 }, g);
+  return { g, glass, shine, coins, val, bar, top, h, w, cx, rows, cols, slot, fillH, coin };
+};
+const mkCoin = (jarO, n) => { const c = S('g', { opacity: 0 }, jarO.coins), gold = jarO.coin === 'gold';
+  S('ellipse', { cx: 0, cy: 4, rx: 20, ry: 8, fill: gold ? '#b8862b' : '#7d8496', stroke: INKP, 'stroke-width': 2 }, c);
+  S('ellipse', { cx: 0, cy: 0, rx: 20, ry: 8, fill: gold ? '#F2C14E' : '#D3D7E0', stroke: INKP, 'stroke-width': 2 }, c);
+  S('ellipse', { cx: -5, cy: -2, rx: 7, ry: 2.5, fill: '#fff', opacity: .6 }, c); return c; };
+/* throw coins from a person's hand into two jars; returns the end time */
+const throwCoins = (tl, P, jars, vals, t0, gap = .028) => {
+  const lists = jars.map((j, k) => { const n = Math.round(vals[k] * j.rows) * j.cols; return Array.from({ length: n }, (_, i) => ({ j, i, c: mkCoin(j, i) })); });
+  const all = []; const m = Math.max(...lists.map(l => l.length)); for (let i = 0; i < m; i++) lists.forEach(l => { if (l[i]) all.push(l[i]); });
+  const arm = { a: 20 }, [hx, hy] = P.hand(1, -110);
+  tl.to(arm, { a: -110, duration: .25, ease: 'power2.out', onUpdate: () => P.rot(1, arm.a) }, t0 - .25)
+    .to(arm, { a: -80, duration: .18, repeat: Math.ceil(all.length * gap / .36), yoyo: true, ease: 'sine.inOut', onUpdate: () => P.rot(1, arm.a) }, t0);
+  all.forEach(({ j, i, c }, k) => { const [tx, ty] = j.slot(i), t = t0 + k * gap, peak = Math.min(hy, j.top) - 90 - Math.random() * 40;
+    tl.set(c, { opacity: 1, x: hx, y: hy }, t).to(c, { x: tx, duration: .62, ease: 'none' }, t).to(c, { y: peak, duration: .3, ease: 'power2.out' }, t).to(c, { y: ty, duration: .32, ease: 'power2.in' }, t + .3); });
+  const end = t0 + all.length * gap + .62;
+  jars.forEach((j, k) => { const o = { v: 0 }; tl.to(o, { v: vals[k], duration: end - t0, ease: 'none', onUpdate: () => j.val.textContent = pct(o.v) }, t0); });
+  tl.to(arm, { a: 10, duration: .4, onUpdate: () => P.rot(1, arm.a) }, end);
+  return end; };
+/* jars → bars: the coins melt into a solid bar of the same height */
+const toBars = (tl, jars, vals, t) => jars.forEach((j, k) => { const hh = j.fillH(vals[k]);
+  tl.to(j.coins, { opacity: 0, duration: .45 }, t + .15).to([j.glass, j.shine], { opacity: 0, duration: .5 }, t)
+    .fromTo(j.bar, { opacity: 0, attr: { y: j.top + j.h - 4, height: 0 } }, { opacity: 1, attr: { y: j.top + j.h - 4 - hh, height: hh }, duration: .7, ease: 'power3.out' }, t + .1)
+    .to(j.g.querySelector('rect'), { opacity: 0, duration: .3 }, t); });
+/* a confidence-interval axis (difference in points) */
+const ciAxis = (p, x, y, w, max, rowsSpec) => { const g = S('g', { transform: `translate(${x} ${y})`, opacity: 0 }, p), sx = v => v / max * w;
+  S('line', { x1: 0, x2: w, y1: 0, y2: 0, stroke: INKP, 'stroke-width': 3 }, g);
+  for (let v = 0; v <= max * 100 + 1e-9; v += 10) { S('line', { x1: sx(v / 100), x2: sx(v / 100), y1: -8, y2: 8, stroke: INKP, 'stroke-width': 3 }, g); T(g, sx(v / 100), 36, (v ? '+' : '') + v + ' pts', { 'text-anchor': 'middle', 'font-size': 20, 'font-weight': 800, fill: '#7a7086' }); }
+  S('line', { x1: 0, x2: 0, y1: -rowsSpec.length * 90 - 20, y2: 0, stroke: '#E23B2E', 'stroke-width': 3, 'stroke-dasharray': '8 7' }, g);
+  T(g, 10, -rowsSpec.length * 90 - 6, '0 = no difference', { 'font-size': 19, 'font-weight': 800, fill: '#E23B2E' });
+  const rowsG = rowsSpec.map(([o, col, lab], i) => { const yy = -60 - i * 90, rg = S('g', { opacity: 0 }, g);
+    S('line', { x1: sx(o.lo), x2: sx(o.hi), y1: yy, y2: yy, stroke: col, 'stroke-width': 12, 'stroke-linecap': 'round' }, rg);
+    [o.lo, o.hi].forEach(v => S('line', { x1: sx(v), x2: sx(v), y1: yy - 14, y2: yy + 14, stroke: col, 'stroke-width': 4, 'stroke-linecap': 'round' }, rg));
+    S('circle', { cx: sx(o.gap), cy: yy, r: 11, fill: '#fff', stroke: col, 'stroke-width': 5 }, rg);
+    T(rg, sx(o.gap), yy - 26, `+${(o.gap * 100).toFixed(1)} pts`, { 'text-anchor': 'middle', 'font-family': 'Fraunces', 'font-weight': 700, 'font-size': 34, fill: col });
+    T(rg, sx(o.hi) + 22, yy + 7, `${lab}  [${(o.lo * 100).toFixed(1)}, ${(o.hi * 100).toFixed(1)}]`, { 'font-size': 20, 'font-weight': 800, fill: col }); return rg; });
+  return { g, rows: rowsG }; };
+scene({ build(r) {
+  const e = this.e = {};
+  r.classList.add('light');
+  e.bg = H('div', 'a', r); e.bg.style.cssText += 'width:1920px;height:1080px;background:radial-gradient(1300px 800px at 50% 20%,#fffdf8,#f3ead8)';
+  e.split = H('div', 'a', r, '<div style="display:flex;width:1920px;height:1080px"><div class="L" style="width:960px;background:linear-gradient(180deg,#fbe5df,#f7d6cd)"></div><div class="R" style="width:960px;background:linear-gradient(180deg,#e6ebf8,#d6def3)"></div></div>');
+  e.sL = e.split.querySelector('.L'); e.sR = e.split.querySelector('.R');
+  e.eb = H('div', 'a eb', r, 'Inferential analysis · Test 1'); e.eb.style.color = '#b5532c';
+  e.h = H('div', 'a h1', r, 'Is this real?'); e.h.style.color = INKP;
+  e.sub = H('div', 'a hand', r, 'same employee'); e.sub.style.cssText += 'font-size:52px;color:#E23B2E';
+  e.q = H('div', 'a', r, '% of checks paid <b>in cash</b> or with <b>no tip</b>'); e.q.style.cssText += `font:700 30px var(--body);color:${INKP};width:760px;text-align:center`;
+  e.card2 = H('div', 'a paper', r); e.card2.style.cssText += 'width:1240px;height:290px';
+  const s = S('svg', { width: 1920, height: 1080, viewBox: '0 0 1920 1080' }, r); s.style.position = 'absolute'; e.svg = s;
+  // test 1: one employee, his discounted vs. non-discounted checks
+  e.g1 = S('g', {}, s);
+  e.p1 = person(e.g1, { x: 330, y: 930, s: 1.3, shirt: '#E23B2E', apron: '#2B2A33', hair: '#3A2E2A' });
+  e.j1 = coinJar(e.g1, 900, 400, 280, 420, 'gold', 'Discounted checks'); e.j2 = coinJar(e.g1, 1320, 400, 280, 420, 'silver', 'Not discounted');
+  e.ci1 = ciAxis(s, 980, 760, 780, .3, [[P.all, '#c2410c', 'difference']]);
+  e.n1 = H('div', 'a', r, `<div style="font:800 24px var(--body);color:#5f566a;text-align:center;width:1920px">α = 0.05 · 95% confidence · paired t-test · t = ${P.t_paired.toFixed(1)} · ${num(P.all.n)} employees</div>`);
+  // test 2: outliers vs. everyone else (split screen)
+  e.g2 = S('g', {}, s);
+  e.p2 = person(e.g2, { x: 170, y: 930, s: 1.05, shirt: '#E23B2E', apron: '#2B2A33' });
+  e.crowd = [[1050, .78, '#5b6bb5'], [1210, .78, '#2a9d8f'], [1130, .9, '#6FA3CF']].map(([x, sc, sh]) => person(e.g2, { x, y: 930, s: sc, shirt: sh, apron: '#2B2A33', hair: ['#7A4A26', '#2E2622', '#5B3A2A'][Math.round(x) % 3] }));
+  e.j3 = coinJar(e.g2, 520, 455, 210, 260, 'gold', 'Discounted'); e.j4 = coinJar(e.g2, 790, 455, 210, 260, 'silver', 'Not discounted');
+  e.j5 = coinJar(e.g2, 1480, 455, 210, 260, 'gold', 'Discounted'); e.j6 = coinJar(e.g2, 1750, 455, 210, 260, 'silver', 'Not discounted');
+  e.hL = H('div', 'a', r, `<div style="width:960px;text-align:center;font:700 40px var(--head);color:#b03a2a">Outliers <span style="font:800 22px var(--body);color:#8a4a40">· ${P.out.n} employees</span></div>`);
+  e.hR = H('div', 'a', r, `<div style="width:960px;text-align:center;font:700 40px var(--head);color:#33468f">Everyone else <span style="font:800 22px var(--body);color:#4a5688">· ${num(P.rest.n)} employees</span></div>`);
+  e.ci2 = ciAxis(s, 420, 1005, 620, .3, [[P.rest, '#33468f', 'everyone else'], [P.out, '#b03a2a', 'outliers']]);
+  e.n2 = H('div', 'a', r, `<div style="font:700 26px/1.45 var(--body);color:${INKP};width:330px">Welch t = <b>${TS.welch.t.toFixed(2)}</b> &gt; ${TS.welch.crit.toFixed(2)}<br><span style="color:#E23B2E;font-weight:800">→ reject H₀:</span> the gap is bigger for outliers<div style="font:800 19px var(--body);color:#7a7086;margin-top:8px">α = 0.05 · 95% confidence</div></div>`);
+}, reset() { const e = this.e;
+  gsap.set(this.el, { autoAlpha: 1 }); gsap.set([e.bg, e.split, e.eb, e.h, e.sub, e.q, e.n1, e.hL, e.hR, e.card2, e.n2], { autoAlpha: 0 });
+  gsap.set(e.eb, { x: 110, y: 64 }); gsap.set(e.h, { x: 110, y: 100 }); gsap.set(e.sub, { x: 116, y: 200 }); gsap.set(e.q, { x: 730, y: 250 }); gsap.set(e.n1, { x: 0, y: 1000 });
+  gsap.set([e.sL, e.sR], { scaleX: 0 }); gsap.set(e.sL, { transformOrigin: '0 50%' }); gsap.set(e.sR, { transformOrigin: '100% 50%' });
+  gsap.set(e.hL, { x: 180, y: 278 }); gsap.set(e.hR, { x: 960, y: 278 }); gsap.set(e.card2, { x: 340, y: 770 }); gsap.set(e.n2, { x: 1230, y: 820 });
+  gsap.set([e.g1, e.g2], { autoAlpha: 0, x: 0 }); e.eb.textContent = 'Inferential analysis · Test 1'; e.sub.textContent = 'same employee';
+  [e.j1, e.j2, e.j3, e.j4, e.j5, e.j6].forEach(j => { j.coins.innerHTML = ''; j.val.textContent = '0%'; gsap.set([j.glass, j.shine, j.coins], { opacity: 1 }); gsap.set(j.bar, { opacity: 0 }); gsap.set(j.g.querySelector('rect'), { opacity: 1 }); });
+  [e.p1, e.p2, ...e.crowd].forEach(p => { p.rot(1, 10); gsap.set(p.g, { opacity: 1 }); });
+  [e.ci1, e.ci2].forEach(c => { gsap.set(c.g, { autoAlpha: 0 }); gsap.set(c.rows, { opacity: 0 }); });
+}, steps: [
+  function dive(tl) { const e = this.e;
+    // back down to the street; the camera pulls back a little, then goes in through the front door
+    gsap.set(world, { autoAlpha: 1 });
+    tl.set(world, { transformOrigin: '960px 3010px' }, 0).to(world, { y: -2160, scale: .9, duration: 1.8, ease: 'power2.inOut' }, 0)
+      .to(world, { scale: 16, duration: 1.4, ease: 'power3.in' }, 1.9).to(e.bg, { autoAlpha: 1, duration: .45 }, 2.95).set(world, { autoAlpha: 0 }, 3.4)
+      .to([e.eb, e.h], { autoAlpha: 1, y: '-=8', duration: .6, stagger: .1 }, 3.2).to(e.sub, { autoAlpha: 1, duration: .5 }, 3.5)
+      .to(e.g1, { autoAlpha: 1, duration: .5 }, 3.3).to(e.q, { autoAlpha: 1, duration: .5 }, 3.6);
+    throwCoins(tl, e.p1, [e.j1, e.j2], [P.all.con, P.all.sin], 4.1); },
+  function ci1(tl) { const e = this.e;
+    // the jars turn into a simple chart, then the confidence interval of the difference appears
+    tl.to(e.p1.g, { opacity: 0, x: '-=60', duration: .5 }, 0).to(e.q, { autoAlpha: 0, duration: .3 }, 0);
+    toBars(tl, [e.j1, e.j2], [P.all.con, P.all.sin], .2);
+    tl.to(e.g1, { x: -560, duration: .9, ease: E }, .9).to(e.ci1.g, { autoAlpha: 1, duration: .5 }, 1.5).fromTo(e.ci1.rows, { opacity: 0, scale: .6, svgOrigin: '0 0' }, { opacity: 1, scale: 1, duration: .7, ease: 'back.out(2)' }, 1.8)
+      .to(e.n1, { autoAlpha: 1, duration: .5 }, 2.2); },
+  function split(tl) { const e = this.e;
+    // test 2: the screen splits in two colors; outliers on the left, everyone else on the right
+    tl.to([e.g1, e.ci1.g, e.n1], { autoAlpha: 0, duration: .5 }, 0)
+      .to(e.sL, { scaleX: 1, duration: .8, ease: E }, .3).to(e.sR, { scaleX: 1, duration: .8, ease: E }, .3).set(e.split, { autoAlpha: 1 }, .3)
+      .to(e.eb, { autoAlpha: 0, duration: .2 }, .2).call(() => { e.eb.textContent = 'Inferential analysis · Test 2'; }, null, .45).to(e.eb, { autoAlpha: 1, duration: .3 }, .5)
+      .to(e.sub, { autoAlpha: 0, duration: .2 }, .2).call(() => { e.sub.textContent = 'one employee vs. the rest'; }, null, .45).to(e.sub, { autoAlpha: 1, duration: .3 }, .5)
+      .to([e.hL, e.hR], { autoAlpha: 1, duration: .5, stagger: .1 }, .9).to(e.g2, { autoAlpha: 1, duration: .5 }, 1);
+    throwCoins(tl, e.p2, [e.j3, e.j4], [P.out.con, P.out.sin], 1.6, .034);
+    throwCoins(tl, e.crowd[2], [e.j5, e.j6], [P.rest.con, P.rest.sin], 1.6, .034); },
+  function ci2(tl) { const e = this.e;
+    tl.to([e.p2.g, ...e.crowd.map(p => p.g)], { opacity: 0, duration: .5 }, 0);
+    toBars(tl, [e.j3, e.j4, e.j5, e.j6], [P.out.con, P.out.sin, P.rest.con, P.rest.sin], .1);
+    tl.fromTo(e.card2, { autoAlpha: 0, y: 810 }, { autoAlpha: 1, y: 770, duration: .6, ease: 'power3.out' }, .9).to(e.ci2.g, { autoAlpha: 1, duration: .4 }, 1.2)
+      .to(e.ci2.rows[0], { opacity: 1, duration: .5 }, 1.4).fromTo(e.ci2.rows[1], { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: .8, ease: 'back.out(1.6)' }, 1.9)
+      .to(e.n2, { autoAlpha: 1, duration: .5 }, 2.6); },
+] });
+
+/* ---------- 3 · DESCRIPTIVE ANALYSIS ---------- */
+scene({ build(r) {
+  const e = this.e = {};
+  H('div', 'a', r).style.cssText = 'width:1920px;height:1080px;background:radial-gradient(1200px 700px at 50% 20%,#1d2a5e,#0a0d2c)';
+  e.eb = H('div', 'a eb', r, 'Descriptive analysis'); e.h = H('div', 'a h1', r, 'Who are the outliers?');
+  const s = S('svg', { width: 1920, height: 1080, viewBox: '0 0 1920 1080' }, r); s.style.position = 'absolute';
+  const hs = TS.dr_hist, ho = TS.dr_hist_out, n = hs.length, g = e.hg = S('g', { transform: 'translate(110 300)' }, s), Wd = 1100, Hd = 520, bw = Wd / n, mx = Math.max(...hs);
+  e.bars = hs.map((v, i) => { const h = v / mx * Hd; return S('rect', { x: i * bw + 1, y: Hd - h, width: bw - 3, height: h, rx: 3, fill: ho[i] ? C.rose : '#6f78b8' }, g); });
+  S('line', { x1: 0, x2: Wd, y1: Hd, y2: Hd, stroke: C.cream, 'stroke-width': 3 }, g);
+  [0, .05, .1, .15].forEach(v => T(g, v / .15 * Wd, Hd + 40, pct(v), { 'text-anchor': 'middle', 'font-size': 24, 'font-weight': 700, fill: C.mut })); T(g, Wd, Hd + 80, 'discounts ÷ sales', { 'text-anchor': 'end', 'font-size': 22, 'font-weight': 700, fill: C.mut });
+  const fx = TS.fence / .15 * Wd; e.fl = S('line', { x1: fx, x2: fx, y1: -20, y2: Hd, stroke: C.warm, 'stroke-width': 4, 'stroke-dasharray': '10 8' }, g); e.ft = T(g, fx + 14, 0, 'Q3 + 1.5 IQR', { 'font-size': 26, 'font-weight': 800, fill: C.warm });
+  e.cnt = H('div', 'a', r, `<div style="font:700 220px/1 var(--head);color:var(--rose)" class="glow"><span class="cn">0</span></div><div style="font:800 30px var(--body)">outliers <span style="color:var(--mut)">of ${num(TS.n)} employees</span></div>
+    <div style="margin-top:34px;display:flex;flex-direction:column;gap:14px"><span class="chip"><b style="color:var(--rose)">${D.types_ctx.disc_per_100_out.toFixed(0)}</b> vs ${D.types_ctx.disc_per_100_rest.toFixed(0)} discounts per 100 checks</span><span class="chip"><b style="color:var(--rose)">${pct(D.types_ctx.dr_out, 1)}</b> vs ${pct(D.types_ctx.dr_rest, 1)} of sales</span></div>`);
+  // receipt of discount types, "times as often"
+  const ty = D.types.filter(t => t.times > 0), hi = ty.slice(0, 4), want = ['EMP 50', 'BIRTHDAY', 'MILTARY 10'], lo = want.map(c => ty.find(t => t.code === c)).filter(Boolean), list = [...hi, ...lo];
+  e.rc = H('div', 'a paper', r); e.rc.style.cssText += 'width:1060px;padding:34px 44px;font-family:var(--body);overflow:hidden;clip-path:inset(0 0 100% 0)';
+  e.rc.innerHTML = `<div style="text-align:center;font:700 34px var(--head)">Discount types</div><div style="text-align:center;font:700 22px var(--body);color:#7a7086;margin-bottom:18px">outliers use them … times as often as everyone else</div>` +
+    list.map((t, i) => `${i === hi.length ? '<div style="border-top:3px dashed #c9bda4;margin:14px 0"></div>' : ''}<div style="display:flex;align-items:center;gap:18px;margin:10px 0"><div style="width:190px;font:800 24px 'Nunito';letter-spacing:.02em">${t.code}</div>
+      <div style="flex:1;position:relative;height:34px"><div style="position:absolute;left:40%;top:-6px;bottom:-6px;border-left:3px solid #1d1a24"></div><div class="tb" data-w="${Math.min(t.times, 2.5)}" style="position:absolute;top:4px;height:26px;border-radius:6px;background:${t.times >= 1 ? '#E23B2E' : '#5b6bb5'};${t.times >= 1 ? 'left:40%' : 'right:60%'};width:0"></div></div>
+      <div style="width:90px;text-align:right;font:700 30px 'Fraunces';color:${t.times >= 1 ? '#E23B2E' : '#3d4c96'}">${t.times.toFixed(1)}×</div></div>`).join('') +
+    `<div style="display:flex;justify-content:space-between;font:700 18px var(--body);color:#7a7086;margin-top:6px"><span>less often</span><span>1× = same as everyone else</span><span>more often</span></div>`;
+  e.tags = [H('div', 'a hand', r, 'comps nobody can verify →'), H('div', 'a hand', r, 'need an ID or a membership →')];
+  e.tags[0].style.cssText += 'font-size:42px;color:var(--rose);width:340px;text-align:right'; e.tags[1].style.cssText += 'font-size:42px;color:#9fb0ff;width:340px;text-align:right';
+}, reset() { const e = this.e; gsap.set(this.el, { autoAlpha: 1 }); gsap.set(world, { autoAlpha: 0 });
+  gsap.set([e.eb, e.h, e.cnt, e.fl, e.ft, ...e.tags], { autoAlpha: 0 }); gsap.set(e.eb, { x: 110, y: 70 }); gsap.set(e.h, { x: 110, y: 110 }); gsap.set(e.cnt, { x: 1340, y: 280 });
+  gsap.set(e.bars, { scaleY: 0, transformOrigin: '50% 100%' }); gsap.set(e.hg, { autoAlpha: 1, x: 0 }); gsap.set(e.rc, { x: 800, y: 250, clipPath: 'inset(0 0 100% 0)' }); e.rc.querySelectorAll('.tb').forEach(b => gsap.set(b, { width: 0 }));
+  gsap.set(e.tags[0], { x: 440, y: 430 }); gsap.set(e.tags[1], { x: 440, y: 720 });
+}, steps: [
+  function hist(tl) { const e = this.e;
+    tl.from(this.el, { x: 400, autoAlpha: 0, duration: .9, ease: 'power3.out' }, 0).to([e.eb, e.h], { autoAlpha: 1, duration: .5, stagger: .1 }, .4)
+      .to(e.bars, { scaleY: 1, duration: .6, stagger: .015, ease: 'back.out(1.5)' }, .6).to([e.fl, e.ft], { autoAlpha: 1, duration: .4 }, 1.6)
+      .to(e.cnt, { autoAlpha: 1, duration: .5 }, 1.8); const o = { v: 0 }; tl.to(o, { v: TS.n_out, duration: 1, onUpdate: () => e.cnt.querySelector('.cn').textContent = Math.round(o.v) }, 1.9); },
+  function types(tl) { const e = this.e;
+    tl.to([e.hg, e.cnt], { autoAlpha: 0, x: '-=200', duration: .6 }, 0).to(e.h, { autoAlpha: 0, duration: .3 }, 0).add(() => { e.h.textContent = 'What do they discount?'; }, .3).to(e.h, { autoAlpha: 1, duration: .4 }, .35)
+      .to(e.rc, { clipPath: 'inset(0 0 0% 0)', duration: 1.6, ease: 'steps(18)' }, .4);
+    e.rc.querySelectorAll('.tb').forEach((b, i) => tl.to(b, { width: (Math.abs(+b.dataset.w - 1) / 1.5 * 60) + '%', duration: .7, ease: 'power2.out' }, 1.6 + i * .12));
+    tl.to(e.tags, { autoAlpha: 1, duration: .5, stagger: .4 }, 2.6); },
+] });
+
+/* ---------- 4 · BAYESIAN NETWORK + MARKOV CHAIN ---------- */
+scene({ build(r) {
+  const e = this.e = {};
+  H('div', 'a', r).style.cssText = 'width:1920px;height:1080px;background:radial-gradient(1200px 800px at 50% 10%,#2b2160,#0a0b26)';
+  e.eb = H('div', 'a eb', r, 'Models'); e.h = H('div', 'a h1', r, 'Bayesian network');
+  const s = S('svg', { width: 1920, height: 1080, viewBox: '0 0 1920 1080' }, r); s.style.position = 'absolute';
+  // lanterns: 6 signals hanging, wired into one risk lantern
+  const sig = ['Discount', 'Cash', 'No tip', 'Comps', 'Disc + void', 'Voids'];
+  const ng = e.ng = S('g', {}, s), top = 290, Rx = 960, Ry = 330;
+  const lantern = (p, x, y, s, col, lab, big) => { const g = S('g', {}, S('g', { transform: `translate(${x} ${y})` }, p)); S('circle', { r: 80 * s, fill: big ? 'url(#haloR)' : 'url(#halo)' }, g);
+    S('rect', { x: -26 * s, y: -46 * s, width: 52 * s, height: 10 * s, rx: 3, fill: '#5a4636' }, g); S('path', { d: `M${-34 * s} ${-36 * s} Q0 ${-50 * s} ${34 * s} ${-36 * s} L${30 * s} ${36 * s} Q0 ${48 * s} ${-30 * s} ${36 * s} Z`, fill: col, opacity: .95 }, g);
+    S('rect', { x: -22 * s, y: 36 * s, width: 44 * s, height: 8 * s, rx: 3, fill: '#5a4636' }, g); const t = T(g, 0, (big ? 100 : 82) * s, lab, { 'text-anchor': 'middle', 'font-size': big ? 40 : 25, 'font-weight': 800, fill: C.cream }); if (big) t.setAttribute('font-family', 'Fraunces'); return g; };
+  e.wires = sig.map((_, i) => { const x = 330 + i * 252, y = 760; const p = S('path', { d: `M${x} ${y - 50} C ${x} ${y - 230}, ${Rx} ${Ry + 240}, ${Rx} ${Ry + 60}`, stroke: '#c9b48a', 'stroke-width': 3, fill: 'none', opacity: .8 }, ng); drawPrep(p); return p; });
+  e.pulses = sig.map((_, i) => { const x = 330 + i * 252, y = 760; const c = S('circle', { r: 8, fill: C.warm, opacity: 0 }, ng); c.dataset.d = `M${x} ${y - 50} C ${x} ${y - 230}, ${Rx} ${Ry + 240}, ${Rx} ${Ry + 60}`; return c; });
+  e.lans = sig.map((n, i) => lantern(ng, 330 + i * 252, 760, 1, ['#ffcf73', '#ff9a6a', '#ffb98a', '#ffd9a0', '#f7a8a0', '#ffc6a0'][i], n));
+  e.risk = lantern(ng, Rx, Ry, 1.7, C.red, 'Risk score', true);
+  e.bn = H('div', 'a', r, `<div class="hand" style="font-size:46px;color:var(--warm)">one score that weighs every signal</div><div style="font:700 26px var(--body);color:var(--mut);margin-top:6px">10 networks · <b style="color:var(--cream)">${R.core_multi} employees</b> stay in the top ${R.top} of all 7 six-signal networks (chance ≈ ${Math.round(R.chance)})</div>`);
+  // Markov chain: two states and the weekly memory
+  const mg = e.mg = S('g', {}, s);
+  const st = (x, lab, col) => { const g = S('g', { transform: `translate(${x} 560)` }, mg); S('circle', { r: 150, fill: col, opacity: .15 }, g); S('circle', { r: 110, fill: 'none', stroke: col, 'stroke-width': 6 }, g); T(g, 0, 14, lab, { 'text-anchor': 'middle', 'font-family': 'Fraunces', 'font-weight': 700, 'font-size': 46, fill: col }); return g; };
+  st(620, 'Normal', C.teal); st(1300, 'Violation', C.rose);
+  const arc = (d, col, lab, lx, ly) => { const p = S('path', { d, stroke: col, 'stroke-width': 5, fill: 'none', 'marker-end': 'url(#arr)' }, mg); T(mg, lx, ly, lab, { 'text-anchor': 'middle', 'font-size': 30, 'font-weight': 800, fill: col }); return p; };
+  const dm = S('defs', {}, s), mk = S('marker', { id: 'arr', viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto' }, dm); S('path', { d: 'M0 0L10 5L0 10z', fill: C.cream }, mk);
+  arc('M720 470 Q960 330 1200 470', C.cream, 'starts · 0.025', 960, 380); arc('M1200 650 Q960 790 720 650', C.cream, 'ends · 0.475', 960, 790);
+  arc('M1330 440 C 1400 300, 1520 380, 1420 500', C.rose, 'stays · 0.525', 1520, 360);
+  e.tok = S('circle', { cx: 620, cy: 560, r: 22, fill: C.warm }, mg);
+  e.mc = H('div', 'a', r, `<div class="hand" style="font-size:46px;color:var(--warm)">this week remembers last week</div>`);
+  // Employee A: lantern per week
+  const wg = e.wg = S('g', {}, s), n = SC.length;
+  e.wl = SC.map((w, i) => { const x = 170 + i * 142, p = w.p || 0, g = S('g', {}, S('g', { transform: `translate(${x} 600)` }, wg));
+    S('line', { x1: 0, x2: 0, y1: -300, y2: -50, stroke: '#c9b48a', 'stroke-width': 2 }, g); const h = S('circle', { r: 60, fill: i === n - 1 ? 'url(#haloR)' : 'url(#halo)', opacity: 0 }, g);
+    const b = S('path', { d: 'M-30 -40 Q0 -54 30 -40 L26 34 Q0 46 -26 34Z', fill: i === n - 1 ? C.red : C.warm, opacity: .15 }, g);
+    T(g, 0, 90, mon(w.week), { 'text-anchor': 'middle', 'font-size': 20, 'font-weight': 700, fill: C.mut }); const v = T(g, 0, 140, p >= .1 ? pct(p) : pct(p, 1), { 'text-anchor': 'middle', 'font-family': 'Fraunces', 'font-weight': 700, 'font-size': i === n - 1 ? 44 : 26, fill: i === n - 1 ? C.rose : C.cream, opacity: 0 });
+    return { g, h, b, v, p }; });
+  e.ea = H('div', 'a', r, `<div style="font:700 50px var(--head)">Employee A</div><div style="font:700 26px var(--body);color:var(--mut)">discounts on <b style="color:var(--rose)">${pct(SC.at(-1).ds)}</b> of checks · her store ${pct(SC.at(-1).sds)}</div>`);
+}, reset() { const e = this.e; gsap.set(this.el, { autoAlpha: 1 }); gsap.set(world, { autoAlpha: 0 });
+  gsap.set([e.eb, e.h, e.bn, e.mc, e.ea], { autoAlpha: 0 }); gsap.set(e.eb, { x: 110, y: 70 }); gsap.set(e.h, { x: 110, y: 110 }); gsap.set(e.bn, { x: 110, y: 940 }); gsap.set(e.mc, { x: 960, xPercent: -50, y: 900 }); gsap.set(e.ea, { x: 110, y: 230 });
+  gsap.set(e.ng, { autoAlpha: 1, y: 0 }); gsap.set(e.lans, { y: -700 }); gsap.set(e.risk, { scale: 0, transformOrigin: '50% 50%' }); e.wires.forEach(w => gsap.set(w, { strokeDashoffset: 1 })); gsap.set(e.pulses, { opacity: 0 });
+  gsap.set(e.mg, { autoAlpha: 0 }); gsap.set(e.tok, { attr: { cx: 620, cy: 560 } }); gsap.set(e.wg, { autoAlpha: 0 }); e.wl.forEach(o => { gsap.set(o.b, { opacity: .15 }); gsap.set([o.h, o.v], { opacity: 0 }); });
+}, steps: [
+  function bn(tl) { const e = this.e;
+    tl.from(this.el, { autoAlpha: 0, duration: .8 }, 0).to([e.eb, e.h], { autoAlpha: 1, duration: .5, stagger: .1 }, .3)
+      .to(e.lans, { y: 0, duration: 1.2, stagger: .12, ease: 'bounce.out' }, .4).to(e.wires, { strokeDashoffset: 0, duration: .8, stagger: .08 }, 1.4)
+      .to(e.risk, { scale: 1, duration: .8, ease: 'back.out(2)' }, 2.1);
+    e.pulses.forEach((c, i) => { tl.add(() => { c.style.offsetPath = `path('${c.dataset.d}')`; c.setAttribute('cx', 0); c.setAttribute('cy', 0); c.animate([{ offsetDistance: '0%', opacity: 1 }, { offsetDistance: '100%', opacity: 1 }], { duration: 1400, iterations: Infinity, delay: i * 230 }); }, 2.4); });
+    tl.to(e.bn, { autoAlpha: 1, duration: .6 }, 2.6); },
+  function markov(tl) { const e = this.e;
+    tl.to([e.ng, e.bn], { autoAlpha: 0, y: -80, duration: .6 }, 0).to(e.h, { autoAlpha: 0, duration: .3 }, 0).add(() => e.h.textContent = 'Markov chain', .3).to(e.h, { autoAlpha: 1, duration: .4 }, .35)
+      .to(e.mg, { autoAlpha: 1, duration: .6 }, .4).to(e.mc, { autoAlpha: 1, duration: .5 }, 1)
+      .to(e.tok, { attr: { cx: 1300 }, duration: 1.2, ease: 'power2.inOut' }, 1.3).to(e.tok, { attr: { cx: 1380, cy: 420 }, duration: .5 }, 2.6).to(e.tok, { attr: { cx: 1300, cy: 560 }, duration: .5 }, 3.1); },
+  function weeks(tl) { const e = this.e;
+    tl.to([e.mg, e.mc], { autoAlpha: 0, duration: .5 }, 0).to(e.h, { autoAlpha: 0, duration: .3 }, 0).add(() => e.h.textContent = 'Week after week', .3).to(e.h, { autoAlpha: 1, duration: .4 }, .35)
+      .to(e.wg, { autoAlpha: 1, duration: .4 }, .4).to(e.ea, { autoAlpha: 1, duration: .5 }, .5);
+    e.wl.forEach((o, i) => { const k = Math.max(o.p, .08); tl.to(o.b, { opacity: .15 + k * .85, duration: .35 }, .8 + i * .16).to(o.h, { opacity: Math.min(1, k * 1.6), duration: .35 }, .8 + i * .16).to(o.v, { opacity: 1, duration: .3 }, .9 + i * .16); });
+    tl.to(e.wl.at(-1).g, { scale: 1.25, transformOrigin: '50% 0%', duration: .5, ease: 'back.out(3)', repeat: 1, yoyo: true }, .8 + e.wl.length * .16); },
+] });
+
+/* ---------- 5 · PROPOSED SOLUTION (matrix of components × stakeholders) ---------- */
+const ROWS = [['Store managers', '🍽️'], ['Regional managers', '🗺️'], ['Upper management', '🏢'], ['Auditors & BI', '🔎']];
+const COLS = ['Table', 'Dashboards', 'Weekly report', 'Expedient'];
+const CELLS = [ // [kind, variant, caption, detail]
+  [['table', 'none', 'No access', ''], ['dash', 'general', 'General', 'their store'], ['mail', 'sales', 'Sales vs last week', 'their store'], ['folder', 'none', 'No access', '']],
+  [['table', 'detail', 'Detail', 'their stores'], ['dash', 'both', 'General + Risk', 'their stores'], ['mail', 'review', 'Employees to review', 'top 5–10'], ['folder', 'their', 'Their employees', '']],
+  [['table', 'summary', 'Summary', 'all stores'], ['dash', 'both', 'General + Risk', 'summary'], ['mail', 'summary', 'Week summary', ''], ['folder', 'none', 'No access', '']],
+  [['table', 'all', 'Everything', ''], ['dash', 'both', 'Everything', ''], ['mail', 'none', 'No email', 'full access'], ['folder', 'any', 'Any employee', '']]];
+const INK = '#1d1a24', CRE = '#f6efe1', RED2 = '#E23B2E', BLU = '#5b6bb5', GRY = '#cfc6b6';
+function mini(kind, v) {
+  const o = `<svg width="300" height="96" viewBox="0 0 300 96">`, c = '</svg>';
+  if (kind === 'table') {
+    if (v === 'none') return o + `<rect x="95" y="10" width="110" height="76" rx="8" fill="none" stroke="${GRY}" stroke-width="3" stroke-dasharray="7 6"/><path d="M130 34l40 28M170 34l-40 28" stroke="${GRY}" stroke-width="5" stroke-linecap="round"/>` + c;
+    const rows = v === 'summary' ? 2 : 5, h = v === 'summary' ? 18 : 9;
+    let r = `${v === 'all' ? `<rect x="104" y="4" width="110" height="80" rx="8" fill="${CRE}" stroke="#e3d6bd" stroke-width="2"/>` : ''}<rect x="94" y="10" width="110" height="80" rx="8" fill="#fff" stroke="${INK}" stroke-width="3"/><rect x="94" y="10" width="110" height="16" rx="6" fill="#efe2c8"/>`;
+    for (let i = 0; i < rows; i++) r += `<rect x="104" y="${32 + i * (h + 4)}" width="${v === 'summary' ? 60 + i * 26 : 90}" height="${h}" rx="3" fill="${i === 0 && v !== 'summary' ? RED2 : '#d9cdb5'}"/>`;
+    if (v === 'detail') r += `<circle cx="218" cy="62" r="16" fill="none" stroke="${INK}" stroke-width="4"/><path d="M229 73l12 12" stroke="${INK}" stroke-width="5" stroke-linecap="round"/>`;
+    return o + r + c;
+  }
+  if (kind === 'dash') {
+    const win = (x, y, red) => `<rect x="${x}" y="${y}" width="120" height="74" rx="9" fill="#fff" stroke="${INK}" stroke-width="3"/><circle cx="${x + 12}" cy="${y + 11}" r="3.5" fill="${RED2}"/><circle cx="${x + 23}" cy="${y + 11}" r="3.5" fill="#f0a35e"/><circle cx="${x + 34}" cy="${y + 11}" r="3.5" fill="#7cc48f"/>` +
+      [0, 1, 2, 3, 4, 5].map(i => { const hh = [18, 30, 22, 38, 28, 44][i]; return `<rect x="${x + 12 + i * 17}" y="${y + 66 - hh}" width="11" height="${hh}" rx="2" fill="${red && i > 3 ? RED2 : red ? '#f0a35e' : BLU}"/>`; }).join('');
+    return o + (v === 'general' ? win(90, 12, false) : win(56, 4, false) + win(128, 18, true)) + c;
+  }
+  if (kind === 'mail') {
+    if (v === 'none') return o + `<rect x="100" y="16" width="100" height="66" rx="8" fill="none" stroke="${GRY}" stroke-width="3"/><path d="M100 20l50 34 50-34" fill="none" stroke="${GRY}" stroke-width="3"/><path d="M90 86L210 12" stroke="${GRY}" stroke-width="5" stroke-linecap="round"/>` + c;
+    let r = `<rect x="80" y="6" width="140" height="86" rx="9" fill="#fff" stroke="${INK}" stroke-width="3"/><rect x="80" y="6" width="140" height="18" rx="7" fill="#efe2c8"/><path d="M90 15h40" stroke="#b9a988" stroke-width="4" stroke-linecap="round"/>`;
+    if (v === 'sales') r += [0, 1, 2].map(i => `<circle cx="96" cy="${38 + i * 18}" r="4" fill="${INK}"/><rect x="106" y="${34 + i * 18}" width="${70 - i * 10}" height="8" rx="3" fill="#d9cdb5"/><path d="M${190} ${44 + i * 18}l8 -8l8 8" stroke="${i ? BLU : '#2f8a57'}" stroke-width="3" fill="none"/>`).join('');
+    if (v === 'review') r += [0, 1, 2, 3].map(i => `<rect x="92" y="${32 + i * 14}" width="22" height="9" rx="3" fill="${i < 2 ? RED2 : '#f0a35e'}"/><rect x="120" y="${32 + i * 14}" width="88" height="9" rx="3" fill="#d9cdb5"/>`).join('');
+    if (v === 'summary') r += `<text x="96" y="60" font-family="Fraunces" font-weight="700" font-size="28" fill="${RED2}">21</text><rect x="136" y="40" width="70" height="8" rx="3" fill="#d9cdb5"/><rect x="136" y="56" width="54" height="8" rx="3" fill="#d9cdb5"/><rect x="96" y="72" width="110" height="8" rx="3" fill="#e6dcc7"/>`;
+    return o + r + c;
+  }
+  if (kind === 'folder') {
+    if (v === 'none') return o + `<path d="M104 24h34l10 10h48v52h-92z" fill="none" stroke="${GRY}" stroke-width="3"/><rect x="138" y="50" width="24" height="20" rx="4" fill="${GRY}"/><path d="M143 50v-6a7 7 0 0 1 14 0v6" fill="none" stroke="${GRY}" stroke-width="4"/>` + c;
+    const many = v === 'any';
+    return o + `${many ? '<path d="M114 16h34l10 10h48v52h-92z" fill="#d7b77c"/>' : ''}<path d="M104 22h34l10 10h48v56h-92z" fill="#c99a52"/><rect x="112" y="30" width="80" height="46" rx="3" fill="#fff" stroke="#e3d6bd"/>` +
+      `<rect x="120" y="40" width="40" height="6" rx="3" fill="#d9cdb5"/><rect x="120" y="52" width="60" height="6" rx="3" fill="#d9cdb5"/><rect x="120" y="64" width="24" height="7" rx="3" fill="${RED2}"/>` +
+      `<g class="flap"><path d="M100 40h104l-6 48h-92z" fill="#e0b366" stroke="#b5853f" stroke-width="2"/></g>` + c;
+  }
+}
+// a big view shrinks into its column of the matrix and the column's cells grow out of it (no cut)
+const into = (tl, e, srcs, j, t0 = 0, rows = null) => {
+  const X = 340 + j * 380, Y = 300, CW = 330, CH = 150, GAP = 175, n = srcs.length, colH = 3 * GAP + CH;
+  const box = k => rows ? { x: X, y: Y + rows[k] * GAP, w: CW, h: CH } : { x: X, y: Y + k * colH / n, w: CW, h: colH / n };
+  const centers = [];
+  srcs.forEach((s, k) => { const w = s.offsetWidth, h = s.offsetHeight, b = box(k), sc = Math.min(b.w / w, b.h / h) * .92, cx = b.x + b.w / 2, cy = b.y + b.h / 2; centers.push([cx, cy]);
+    tl.to(s, { x: cx - w * sc / 2, y: cy - h * sc / 2, scale: sc, rotation: 0, rotationY: 0, autoAlpha: 1, transformOrigin: '0 0', duration: .9, ease: E }, t0 + k * .06)
+      .to(s, { autoAlpha: 0, duration: .3 }, t0 + .9 + k * .06); });
+  e.cells.forEach((row, i) => { const c = row[j], [cx, cy] = rows ? (centers[rows.indexOf(i)] || [X + CW / 2, Y + i * GAP + CH / 2]) : centers[Math.min(n - 1, Math.floor(i * n / 4))];
+    tl.fromTo(c, { autoAlpha: 0, x: cx - CW / 2, y: cy - CH / 2, scale: .55 }, { autoAlpha: 1, x: X, y: Y + i * GAP, scale: 1, duration: .6, ease: 'back.out(1.3)', immediateRender: false }, t0 + .8 + i * .07); });
+  tl.fromTo(e.colh[j], { autoAlpha: 0, y: 250 }, { autoAlpha: 1, y: 220, duration: .5, immediateRender: false }, t0 + .8);
+};
+scene({ build(r) {
+  const e = this.e = {};
+  r.classList.add('light'); H('div', 'a', r).style.cssText = 'width:1920px;height:1080px;background:radial-gradient(1400px 900px at 50% 0%,#fffdf8,#f4ecdd)';
+  e.t1 = H('div', 'a h1', r, 'Proposed solution'); e.t2 = H('div', 'a hand', r, 'an example'); e.t2.style.cssText += 'font-size:60px;color:#E23B2E';
+  // big views (shown in the center, then shrunk into the matrix)
+  const rows = [['Week', 'Employee', 'Store', 'Discount', 'Cash', 'Score', 'Priority'], ['Aug 13', 'A', '1', '23%', '2.09', '98th', 'P1'], ['Aug 13', 'B', '7', '37%', '1.62', '99th', 'P1'], ['Aug 13', 'C', '12', '23%', '1.41', '99th', 'P1'], ['Aug 13', 'D', '3', '17%', '1.20', '96th', 'P2'], ['Aug 6', 'A', '1', '13%', '0.99', '87th', '—']];
+  e.tab = H('div', 'a paper', r, `<div style="padding:22px 28px;font:700 30px var(--head)">gold.fraud_employee_week</div><table style="border-collapse:collapse;width:100%;font:700 22px var(--body)">${rows.map((rw, i) => `<tr style="${i ? '' : 'background:#efe5d0;font-size:16px;letter-spacing:.1em;text-transform:uppercase;color:#7a7086'}">${rw.map(c => `<td style="padding:12px 18px;border-top:2px solid #e8dcc5">${c === 'P1' ? '<span class="p1">P1</span>' : c === 'P2' ? '<span class="p2">P2</span>' : c}</td>`).join('')}</tr>`).join('')}</table>`); e.tab.style.width = '920px';
+  e.tb = H('div', 'a', r, `<div style="display:flex;flex-direction:column;gap:22px;font:700 34px/1.3 var(--body);color:#1d1a24"><div>• One row per <b style="color:#b5532c">employee and week</b></div><div>• Every <b style="color:#b5532c">signal</b>, the <b style="color:#b5532c">risk score</b> and the <b style="color:#b5532c">priority</b></div></div>`);
+  // dashboards: the idea of a dashboard, no numbers
+  const dots3 = `<span style="display:flex;gap:7px"><i style="width:12px;height:12px;border-radius:50%;background:#E23B2E"></i><i style="width:12px;height:12px;border-radius:50%;background:#f0a35e"></i><i style="width:12px;height:12px;border-radius:50%;background:#7cc48f"></i></span>`;
+  const dash = (title, kind) => { const d = H('div', 'a paper', r); d.style.cssText += 'width:760px;height:470px;padding:22px 28px;overflow:hidden';
+    const tiles = [0, 1, 2].map(i => `<div style="flex:1;border-radius:12px;background:#f1e8d6;padding:14px 16px 16px"><div style="height:10px;width:${46 + i * 14}%;border-radius:5px;background:#d9cdb5"></div><div style="height:28px;width:${44 + (i * 17) % 30}%;margin-top:12px;border-radius:8px;background:${kind ? ['#E23B2E', '#f0a35e', '#E23B2E'][i] : '#5b6bb5'};opacity:.8"></div></div>`).join('');
+    const HH = [60, 95, 75, 130, 105, 150, 120, 170, 140, 185, 160, 200];
+    const bars = HH.map((h, i) => { const x = 16 + i * 57, bw = 34;
+      if (!kind) return `<rect class="db" x="${x}" y="${240 - h}" width="${bw}" height="${h}" rx="4" fill="#5b6bb5"/>`;
+      const a = h * .55, b = h * .3, c = h * .15;
+      return `<g class="db"><rect x="${x}" y="${240 - a}" width="${bw}" height="${a}" rx="3" fill="#ddd3c2"/><rect x="${x}" y="${240 - a - b}" width="${bw}" height="${b}" rx="3" fill="#f0a35e"/><rect x="${x}" y="${240 - a - b - c}" width="${bw}" height="${c}" rx="3" fill="#E23B2E"/></g>`; }).join('');
+    d.innerHTML = `<div style="display:flex;align-items:center;gap:16px">${dots3}<div style="font:700 30px var(--head)">${title}</div></div><div style="display:flex;gap:12px;margin:16px 0">${tiles}</div><svg width="704" height="250" viewBox="0 0 704 250"><path d="M8 242 H700" stroke="#e3d6bd" stroke-width="3"/>${bars}</svg>`;
+    return d; };
+  e.d1 = dash('General', 0); e.d2 = dash('Risk monitor', 1);
+  // weekly report: an inbox where the Thursday emails arrive, with notifications
+  const av = (t, red) => `<span style="width:52px;height:52px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;background:${red ? '#E23B2E' : '#e3d9c6'};color:${red ? '#fff' : '#7a7086'};font:800 19px var(--body)">${t}</span>`;
+  const row = (a, who, subj, time, isNew) => `<div style="display:flex;align-items:center;gap:16px;height:96px;padding:0 26px;border-bottom:1px solid #ece3d2;font:700 20px/1.35 var(--body);color:${isNew ? '#1d1a24' : '#9a8f84'}">
+    <span style="width:14px;height:14px;flex:none;border-radius:50%;background:${isNew ? '#E23B2E' : 'transparent'};box-shadow:${isNew ? '0 0 0 6px rgba(226,59,46,.16)' : 'none'}"></span>${a}<div style="flex:1;min-width:0"><b style="display:block;color:${isNew ? '#1d1a24' : '#6b6272'}">${who}</b><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${subj}</div></div><span style="font-weight:800;color:${isNew ? '#E23B2E' : '#9a8f84'}">${time}</span></div>`;
+  const NEWM = [['store managers', 'Your week: sales vs last week'], ['regional managers', 'Employees to review first'], ['upper management', 'Week summary']];
+  const OLD = [['PY', 'Payroll', 'October close: please confirm hours by Friday', '8:41 AM'], ['TR', 'Training', 'New server onboarding sessions for next week', '8:12 AM'], ['BN', 'Benefits', 'Open enrollment closes on the 30th', 'Wed'], ['OP', 'Operations', 'Holiday staffing plan, draft 2', 'Wed']];
+  e.lap = H('div', 'a paper', r, `<div style="display:flex;align-items:center;gap:10px;height:58px;padding:0 24px;background:#efe5d0;border-radius:14px 14px 0 0;font:700 19px var(--body);color:#7a7086">${dots3}<span style="margin-left:14px">Inbox</span><span style="margin-left:auto;font:800 19px var(--body);color:#b5532c">Thursday · 9:00 AM</span></div>
+    <div style="display:flex;height:560px"><div style="width:200px;flex:none;padding:26px;border-right:1px solid #ece3d2;display:flex;flex-direction:column;gap:18px;font:700 20px var(--body);color:#9a8f84"><b style="color:#1d1a24">Inbox</b><span>Flagged</span><span>Sent</span><span>Reports</span></div>
+    <div style="flex:1;overflow:hidden">${[2, 1, 0].map(k => `<div class="nw" data-k="${k}" style="height:0;overflow:hidden;background:#fff3ee">${row(av('SO', 1), 'Stack Overflow · Fraud Detection', `To <b>${NEWM[k][0]}</b> · ${NEWM[k][1]}`, '9:00 AM', 1)}</div>`).join('')}${OLD.map(o => row(av(o[0]), o[1], o[2], o[3])).join('')}</div></div>`);
+  e.lap.style.width = '1120px'; e.lap.style.overflow = 'hidden';
+  e.nw = [0, 1, 2].map(k => e.lap.querySelector(`.nw[data-k="${k}"]`));
+  e.toasts = NEWM.map(([to]) => { const t = H('div', 'a', r, `<div style="display:flex;gap:16px;align-items:center;width:420px;padding:20px 24px;border-radius:18px;background:rgba(30,33,40,.93);box-shadow:0 22px 50px rgba(30,20,10,.3);font:700 19px/1.35 var(--body);color:#d8d2c8"><span style="width:14px;height:14px;flex:none;border-radius:50%;background:#E23B2E;box-shadow:0 0 0 6px rgba(226,59,46,.25)"></span><div><b style="display:block;color:#fff;font-size:21px">New weekly report</b>sent to ${to}</div></div>`); return t; });
+  // expedient: a generic case file (a representation, not data)
+  e.ex = H('div', 'a', r, `<svg width="740" height="540" viewBox="0 0 740 540">
+    <path d="M24 64 h220 l40 46 h432 a14 14 0 0 1 14 14 v386 a14 14 0 0 1 -14 14 h-678 a14 14 0 0 1 -14 -14 z" fill="#c99a52"/>
+    <text x="54" y="98" font-family="Nunito" font-weight="800" font-size="22" letter-spacing="5" fill="#6e4b1f">EXPEDIENT</text>
+    <g transform="rotate(-2 370 260)"><rect x="84" y="128" width="572" height="330" rx="10" fill="#fff" stroke="#e3d6bd" stroke-width="2"/>
+      <circle cx="150" cy="196" r="38" fill="#e3d9c6"/><circle cx="150" cy="184" r="14" fill="#b9ab92"/><path d="M124 220 q26 -30 52 0" fill="#b9ab92"/>
+      <rect x="210" y="170" width="250" height="16" rx="8" fill="#d9cdb5"/><rect x="210" y="200" width="180" height="12" rx="6" fill="#e6dcc7"/>
+      <rect x="112" y="258" width="500" height="12" rx="6" fill="#ece3d2"/><rect x="112" y="282" width="440" height="12" rx="6" fill="#ece3d2"/></g>
+    <path d="M14 300 h712 l-16 224 a12 12 0 0 1 -12 10 h-656 a12 12 0 0 1 -12 -10 z" fill="#e0b366" stroke="#b5853f" stroke-width="3"/>
+    <g transform="rotate(-7 520 420)"><rect x="372" y="378" width="306" height="78" rx="10" fill="none" stroke="#E23B2E" stroke-width="5"/><text x="525" y="428" text-anchor="middle" font-family="Nunito" font-weight="900" font-size="28" letter-spacing="3" fill="#E23B2E">REVIEW FIRST</text></g>
+    <rect x="70" y="390" width="200" height="14" rx="7" fill="#c99a52" opacity=".6"/><rect x="70" y="418" width="140" height="14" rx="7" fill="#c99a52" opacity=".6"/></svg>`);
+  // matrix
+  e.rowh = ROWS.map(([n, ic]) => H('div', 'rowh', r, `<span style="font-size:42px">${ic}</span><span>${n}</span>`));
+  e.colh = COLS.map(c => H('div', 'colh', r, c));
+  e.cells = CELLS.map(row => row.map(([k, v, a, b]) => a === 'No access' ? H('div', 'cell e', r, '') : H('div', 'cell' + (v === 'none' ? ' n' : ''), r, `${mini(k, v)}<div class="cap">${a}${b ? ` <small>· ${b}</small>` : ''}</div>`)));
+  // three cards
+  e.three = [['Overall diagnosis', 'How are we doing?', '', '#2a9d8f'], ['Detection', 'Who do we review this week?', '', '#d08a1e'], ['Prevention', 'Who is rising, before it grows?', '+ rising employees in the weekly report', '#E23B2E']]
+    .map(([t, q, u, col]) => { const d = H('div', 'big3', r, `<div class="t" style="color:${col}">${t}</div><div class="q">“${q}”</div><div class="u" style="position:absolute;left:36px;right:36px;bottom:30px">${u}</div>`); d.style.borderColor = col; d.style.height = '720px'; return d; });
+}, reset() { const e = this.e; gsap.set(this.el, { autoAlpha: 1 }); gsap.set(world, { autoAlpha: 0 });
+  gsap.set([e.t1, e.t2, e.tab, e.tb, e.d1, e.d2, e.lap, ...e.toasts, e.ex, ...e.rowh, ...e.colh, ...e.cells.flat(), ...e.three], { autoAlpha: 0, scale: 1, rotation: 0 });
+  gsap.set([...e.cells.flat(), ...e.colh], { zIndex: 3 }); gsap.set(e.three, { zIndex: 1 }); gsap.set(e.nw, { height: 0 });
+  gsap.set(e.t1, { x: 960, y: 380, xPercent: -50, scale: 1.2, transformOrigin: '50% 50%' }); gsap.set(e.t2, { x: 960, y: 520, xPercent: -50 });
+  gsap.set(e.tab, { x: 500, y: 250, transformOrigin: '0 0' }); gsap.set(e.tb, { x: 500, y: 760 });
+  gsap.set(e.d1, { x: 150, y: 300, transformOrigin: '0 0' }); gsap.set(e.d2, { x: 1010, y: 300, transformOrigin: '0 0' });
+  gsap.set(e.lap, { x: 300, y: 250, transformOrigin: '0 0' }); e.toasts.forEach(t => gsap.set(t, { x: 1450, y: 170 })); gsap.set(e.ex, { x: 590, y: 220, transformOrigin: '0 0' });
+  e.rowh.forEach((d, i) => gsap.set(d, { x: 70, y: 300 + i * 175 })); e.colh.forEach((d, j) => gsap.set(d, { x: 340 + j * 380, y: 220 }));
+  e.cells.forEach((row, i) => row.forEach((d, j) => gsap.set(d, { x: 340 + j * 380, y: 300 + i * 175 })));
+  e.three.forEach((d, i) => gsap.set(d, { x: 130 + i * 590, y: 170 }));
+  [e.d1, e.d2].forEach(d => gsap.set(d.querySelectorAll('.db'), { scaleY: 0, transformOrigin: '50% 100%' }));
+}, steps: [
+  function title(tl) { const e = this.e; tl.from(this.el, { autoAlpha: 0, duration: .8 }, 0).to(e.t1, { autoAlpha: 1, scale: 1, duration: .9, ease: 'back.out(1.6)' }, .3).to(e.t2, { autoAlpha: 1, y: 500, duration: .6 }, .9); },
+  function table(tl) { const e = this.e;
+    tl.to(e.t1, { y: 60, x: 110, xPercent: 0, scale: .62, transformOrigin: '0 0', duration: .9, ease: E }, 0).to(e.t2, { autoAlpha: 0, duration: .4 }, 0)
+      .fromTo(e.tab, { autoAlpha: 0, y: 330, rotation: -4 }, { autoAlpha: 1, y: 230, rotation: 0, duration: .9, ease: 'back.out(1.4)' }, .4).to(e.tb, { autoAlpha: 1, duration: .5 }, 1.1)
+      .from(e.tab.querySelectorAll('tr'), { autoAlpha: 0, x: -30, stagger: .1, duration: .4 }, .9); },
+  function axes(tl) { const e = this.e;
+    tl.to(e.tb, { autoAlpha: 0, duration: .3 }, 0).fromTo(e.rowh, { autoAlpha: 0, x: -200 }, { autoAlpha: 1, x: 70, duration: .6, stagger: .1, ease: 'power2.out' }, .3);
+    into(tl, e, [e.tab], 0, .1); },
+  function dashboards(tl) { const e = this.e;
+    tl.to([...e.rowh, e.colh[0], ...e.cells.map(r => r[0])], { autoAlpha: .12, duration: .4 }, 0)
+      .fromTo([e.d1, e.d2], { autoAlpha: 0, y: 360, rotation: i => i ? 3 : -3 }, { autoAlpha: 1, y: 300, rotation: 0, duration: .8, stagger: .2, ease: 'back.out(1.4)' }, .3)
+      .to([...e.d1.querySelectorAll('.db'), ...e.d2.querySelectorAll('.db')], { scaleY: 1, duration: .5, stagger: .01 }, .9); },
+  function dashCol(tl) { const e = this.e;
+    into(tl, e, [e.d1, e.d2], 1, 0); tl.to([...e.rowh, e.colh[0], ...e.cells.map(r => r[0])], { autoAlpha: 1, duration: .5 }, .5); },
+  function inbox(tl) { const e = this.e; tl.to([...e.rowh, ...e.colh.slice(0, 2), ...e.cells.flatMap(r => r.slice(0, 2))], { autoAlpha: .12, duration: .4 }, 0)
+    .fromTo(e.lap, { autoAlpha: 0, y: 330 }, { autoAlpha: 1, y: 250, duration: .9, ease: 'power3.out' }, .2)
+    .to(e.nw[0], { height: 96, duration: .8, ease: 'back.out(1.4)' }, 1.3).fromTo(e.toasts[0], { autoAlpha: 0, x: 1520 }, { autoAlpha: 1, x: 1450, duration: .6, ease: 'back.out(1.6)' }, 1.4); },
+  function mail2(tl) { const e = this.e; tl.to(e.nw[1], { height: 96, duration: .8, ease: 'back.out(1.4)' }, 0).to(e.toasts[0], { y: '+=118', duration: .5, ease: 'power2.out' }, 0)
+    .fromTo(e.toasts[1], { autoAlpha: 0, x: 1520 }, { autoAlpha: 1, x: 1450, duration: .6, ease: 'back.out(1.6)' }, .15); },
+  function mail3(tl) { const e = this.e; tl.to(e.nw[2], { height: 96, duration: .8, ease: 'back.out(1.4)' }, 0).to(e.toasts.slice(0, 2), { y: '+=118', duration: .5, ease: 'power2.out' }, 0)
+    .fromTo(e.toasts[2], { autoAlpha: 0, x: 1520 }, { autoAlpha: 1, x: 1450, duration: .6, ease: 'back.out(1.6)' }, .15); },
+  function mailCol(tl) { const e = this.e;
+    tl.to(e.toasts, { autoAlpha: 0, x: '+=60', duration: .4, stagger: .05 }, 0); into(tl, e, [e.lap], 2, .1); tl.to([...e.rowh, e.colh[0], e.colh[1], ...e.cells.map(r => r[0]), ...e.cells.map(r => r[1])], { autoAlpha: 1, duration: .5 }, .5); },
+  function expedient(tl) { const e = this.e; tl.to([...e.rowh, ...e.colh.slice(0, 3), ...e.cells.flatMap(r => r.slice(0, 3))], { autoAlpha: .12, duration: .4 }, 0).fromTo(e.ex, { autoAlpha: 0, rotationY: -90, transformOrigin: '0 50%' }, { autoAlpha: 1, rotationY: 0, duration: 1.1, ease: 'power3.out' }, .3); },
+  function exCol(tl) { const e = this.e;
+    into(tl, e, [e.ex], 3, 0); tl.to([...e.rowh, ...e.colh.slice(0, 3), ...e.cells.flat().filter((_, i) => i % 4 !== 3)], { autoAlpha: 1, duration: .5 }, .5)
+      .fromTo(this.el.querySelectorAll('.flap'), { scaleY: 1 }, { scaleY: -.35, transformOrigin: '50% 100%', duration: .7, stagger: .2, ease: 'back.out(1.6)' }, 1.4); },
+  function three(tl) { const e = this.e;
+    // every column collapses vertically into one tile, then the tiles settle inside the three cards
+    const REP = [3, 1, 1, 1], TX = [847, 390, 1113, 1570], CY = 640, SC = .78;
+    tl.to(e.t1, { autoAlpha: 0, duration: .4 }, 0).to(e.rowh, { autoAlpha: 0, x: '-=60', duration: .5, stagger: .05 }, 0);
+    [0, 1, 2, 3].forEach(j => { const ry = 300 + REP[j] * 175, rp = e.cells[REP[j]][j];
+      tl.set(rp, { zIndex: 4 }, 0);
+      e.cells.forEach((row, i) => { if (i !== REP[j]) tl.to(row[j], { y: ry, scale: .92, autoAlpha: 0, duration: .6, ease: 'power2.in' }, .1 + j * .05); });
+      tl.to(rp, { x: TX[j] - 165, y: CY - 75, scale: SC, duration: .9, ease: E }, 1 + j * .06).to(e.colh[j], { x: TX[j] - 165, y: CY - 135, scale: .7, duration: .9, ease: E }, 1 + j * .06); });
+    tl.fromTo(e.three, { autoAlpha: 0, y: 230 }, { autoAlpha: 1, y: 170, duration: .8, stagger: .15, ease: 'power3.out' }, .8); },
+] });
+
+/* ---------- 5b · WORKFLOW (bronze → streaming tables → gold → models → review list → dashboards & emails) ---------- */
+scene({ build(r) { const e = this.e = {};
+  r.classList.add('light'); H('div', 'a', r).style.cssText = 'width:1920px;height:1080px;background:radial-gradient(1400px 900px at 50% 0%,#fffdf8,#f4ecdd)';
+  e.eb = H('div', 'a eb', r, 'How it runs'); e.eb.style.color = '#b5532c';
+  e.h = H('div', 'a h2', r, 'From raw checks to <span style="color:#E23B2E">Thursday’s email</span>'); e.h.style.color = '#1d1a24';
+  const N = { bronze: [170, 560, 'Bronze', 'Raw POS checks · JSON', '#b0703f'], silver: [470, 560, 'Silver', 'Streaming tables · Lakeflow pipeline', '#8c96a3'], gold: [770, 560, 'Gold', 'Employee & manager metrics per week', '#c99a2e'],
+    bayes: [1070, 430, 'Bayesian network', 'vs. their store', '#5b6bb5'], ts: [1070, 690, 'Time series', 'vs. their own history', '#2a9d8f'], review: [1370, 560, 'Review list', 'Priority 1 · 2 · 3 + reasons', '#E23B2E'],
+    dash: [1705, 395, 'Dashboards', 'General · Risk monitor', '#1d1a24'], mail: [1705, 560, 'Weekly emails', 'every Thursday', '#1d1a24'], exp: [1705, 725, 'Expedients', 'per employee', '#1d1a24'] };
+  const W0 = 250, H0 = 140, WO = 240, HO = 118;
+  const svg = S('svg', { width: 1920, height: 1080, viewBox: '0 0 1920 1080' }); svg.style.cssText = 'position:absolute;left:0;top:0'; r.appendChild(svg);
+  const size = k => ['dash', 'mail', 'exp'].includes(k) ? [WO, HO] : [W0, H0];
+  const edge = (a, b, col) => { const [ax, ay] = N[a], [bx, by] = N[b], x1 = ax + size(a)[0] / 2, x2 = bx - size(b)[0] / 2, m = (x1 + x2) / 2, d = `M${x1} ${ay} C ${m} ${ay}, ${m} ${by}, ${x2} ${by}`;
+    const base = S('path', { d, fill: 'none', stroke: '#ddd0b8', 'stroke-width': 4 }, svg); drawPrep(base);
+    const flow = S('path', { d, fill: 'none', stroke: col, 'stroke-width': 7, 'stroke-linecap': 'round', 'stroke-dasharray': '2 23', class: 'flow', opacity: 0 }, svg); return { base, flow }; };
+  e.E = { bs: edge('bronze', 'silver', '#b0703f'), sg: edge('silver', 'gold', '#8c96a3'), gb: edge('gold', 'bayes', '#c99a2e'), gt: edge('gold', 'ts', '#c99a2e'), br: edge('bayes', 'review', '#5b6bb5'), tr: edge('ts', 'review', '#2a9d8f'),
+    rd: edge('review', 'dash', '#E23B2E'), rm: edge('review', 'mail', '#E23B2E'), re: edge('review', 'exp', '#E23B2E') };
+  e.N = {}; Object.entries(N).forEach(([k, [x, y, t, sub, col]]) => { const [w, h] = size(k), medal = ['bronze', 'silver', 'gold'].includes(k);
+    const d = H('div', 'a paper', r, `<div style="height:8px;background:${col};border-radius:14px 14px 0 0"></div><div style="padding:14px 20px 0;display:flex;align-items:center;gap:12px">${medal ? `<span style="width:30px;height:30px;flex:none;border-radius:50%;background:${col};box-shadow:inset 0 -4px 0 rgba(0,0,0,.18)"></span>` : ''}<span style="font:700 ${h > 120 ? 30 : 26}px var(--head);color:#1d1a24">${t}</span></div><div style="padding:8px 20px 0;font:700 ${h > 120 ? 19 : 17}px/1.3 var(--body);color:#7a7086">${sub}</div>`);
+    d.style.cssText += `width:${w}px;height:${h}px;overflow:hidden`; d.dataset.x = x - w / 2; d.dataset.y = y - h / 2; e.N[k] = d; });
+  e.bracket = H('div', 'a', r, '<div style="width:550px;border-top:3px dashed #c9b99a;padding-top:10px;text-align:center;font:800 17px var(--body);letter-spacing:.18em;color:#a08f72">DATA PIPELINE · MEDALLION</div>');
+  e.foot = H('div', 'a', r, '<div style="display:flex;align-items:center;gap:16px;padding:16px 30px;border-radius:999px;background:#1d1a24;color:#FFF8E8;font:800 24px var(--body)"><svg width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="12" fill="none" stroke="#FFD27A" stroke-width="3"/><path d="M15 8v7l5 3" stroke="#FFD27A" stroke-width="3" fill="none" stroke-linecap="round"/></svg>One Databricks job runs all of this <span style="color:#FFD27A">every week</span></div>');
+}, reset() { const e = this.e; gsap.set(this.el, { autoAlpha: 1 }); gsap.set(world, { autoAlpha: 0 });
+  gsap.set(e.eb, { x: 960, y: 90, xPercent: -50, autoAlpha: 0 }); gsap.set(e.h, { x: 960, y: 130, xPercent: -50, autoAlpha: 0 });
+  Object.values(e.N).forEach(d => gsap.set(d, { x: +d.dataset.x, y: +d.dataset.y, autoAlpha: 0, scale: .85 }));
+  Object.values(e.E).forEach(({ base, flow }) => { gsap.set(base, { strokeDashoffset: 1 }); gsap.set(flow, { opacity: 0 }); });
+  gsap.set(e.bracket, { x: 45, y: 668, autoAlpha: 0 }); gsap.set(e.foot, { x: 960, y: 900, xPercent: -50, autoAlpha: 0 });
+}, steps: [
+  function pipeline(tl) { const e = this.e, N = e.N, E2 = e.E;
+    tl.from(this.el, { autoAlpha: 0, duration: .6 }, 0).to(e.eb, { autoAlpha: 1, duration: .5 }, .2).to(e.h, { autoAlpha: 1, duration: .6 }, .35);
+    [['bronze', 'bs'], ['silver', 'sg'], ['gold', null]].forEach(([n, ed], i) => { const t = .8 + i * .7;
+      tl.to(N[n], { autoAlpha: 1, scale: 1, duration: .5, ease: 'back.out(1.7)' }, t);
+      if (ed) tl.to(E2[ed].base, { strokeDashoffset: 0, duration: .45 }, t + .35).to(E2[ed].flow, { opacity: 1, duration: .3 }, t + .7); });
+    tl.to(e.bracket, { autoAlpha: 1, duration: .5 }, 2.6); },
+  function outputs(tl) { const e = this.e, N = e.N, E2 = e.E;
+    tl.to([E2.gb.base, E2.gt.base], { strokeDashoffset: 0, duration: .5 }, 0).to([E2.gb.flow, E2.gt.flow], { opacity: 1, duration: .3 }, .4)
+      .to([N.bayes, N.ts], { autoAlpha: 1, scale: 1, duration: .5, stagger: .12, ease: 'back.out(1.7)' }, .35)
+      .to([E2.br.base, E2.tr.base], { strokeDashoffset: 0, duration: .5 }, .9).to([E2.br.flow, E2.tr.flow], { opacity: 1, duration: .3 }, 1.3)
+      .to(N.review, { autoAlpha: 1, scale: 1, duration: .5, ease: 'back.out(1.7)' }, 1.3)
+      .to([E2.rd.base, E2.rm.base, E2.re.base], { strokeDashoffset: 0, duration: .5, stagger: .1 }, 1.8).to([E2.rd.flow, E2.rm.flow, E2.re.flow], { opacity: 1, duration: .3 }, 2.3)
+      .to([N.dash, N.mail, N.exp], { autoAlpha: 1, scale: 1, duration: .5, stagger: .12, ease: 'back.out(1.7)' }, 2.1)
+      .fromTo(e.foot, { autoAlpha: 0, y: 940 }, { autoAlpha: 1, y: 900, duration: .6, ease: 'power3.out' }, 2.9); },
+] });
+
+/* ---------- 6 · QUESTIONS (back to the city) ---------- */
+scene({ build(r) { const e = this.e = {};
+  e.q = H('div', 'a', r, `<div class="h1 glow" style="font-size:150px;text-align:center">Questions?</div><div class="eb" style="text-align:center;margin-top:16px">Team Stack Overflow</div>`); e.q.style.width = '1920px';
+}, reset() { gsap.set(this.el, { autoAlpha: 1 }); gsap.set(world, { autoAlpha: 1, ...cam(-1080) }); gsap.set(this.e.q, { autoAlpha: 0, y: 190 }); gsap.set(W.cons, { autoAlpha: 0 }); },
+steps: [ function end(tl) { tl.to(world, { y: -2160, duration: 2.6, ease: 'power2.inOut' }, 0).to(this.e.q, { autoAlpha: 1, y: 150, duration: 1 }, 1.4).fromTo(W.sign, { opacity: 0 }, { opacity: 1, duration: .08, repeat: 5, yoyo: true }, 2.2).to(W.sign, { opacity: 1, duration: .1 }, 2.75); } ] });
+
+/* =====================================================================
+   NAVIGATION
+   ===================================================================== */
+const FLAT = []; SCN.forEach((s, i) => s.steps.forEach((_, k) => FLAT.push([i, k])));
+let cur = -1, active = null;
+function show(si) { SCN.forEach((s, i) => gsap.set(s.el, { visibility: i === si ? 'visible' : 'hidden' })); }
+function go(n) {
+  n = Math.max(0, Math.min(FLAT.length - 1, n)); const [si, k] = FLAT[n], s = SCN[si];
+  const fwd = n === cur + 1; if (active) active.progress(1).kill();
+  const same = cur >= 0 && FLAT[cur][0] === si;
+  if (!(fwd && same)) { show(si); s.reset(); for (let i = 0; i < k; i++) { const t = gsap.timeline(); s.steps[i].call(s, t); t.progress(1).kill(); } }
+  active = gsap.timeline(); s.steps[k].call(s, active); if (!fwd) active.progress(1);
+  cur = n; document.getElementById('bar').style.transform = `scaleX(${n / (FLAT.length - 1)})`; history.replaceState(null, '', '#' + (n + 1));
+  ink.clear();
+}
+const fit = () => { const s = Math.min(innerWidth / 1920, innerHeight / 1080); stage.style.transform = `translate(-50%,-50%) scale(${s})`; };
+addEventListener('resize', fit); fit();
+const ink = (() => { const c = document.getElementById('ink'), x = c.getContext('2d'); let mode = null, down = false, last = null;
+  const pos = e => { const r = stage.getBoundingClientRect(), s = r.width / 1920; return [(e.clientX - r.left) / s, (e.clientY - r.top) / s]; };
+  c.addEventListener('pointerdown', e => { down = true; last = pos(e); }); addEventListener('pointerup', () => down = false);
+  c.addEventListener('pointermove', e => { if (!down || !mode) return; const p = pos(e); x.globalCompositeOperation = mode === 'e' ? 'destination-out' : 'source-over'; x.strokeStyle = mode === 'h' ? 'rgba(255,214,0,.35)' : '#FF7363'; x.lineWidth = mode === 'h' ? 34 : mode === 'e' ? 60 : 6; x.lineCap = 'round'; x.beginPath(); x.moveTo(...last); x.lineTo(...p); x.stroke(); last = p; });
+  return { set(m) { mode = mode === m ? null : m; c.classList.toggle('on', !!mode); }, clear() { x.clearRect(0, 0, 1920, 1080); }, off() { mode = null; c.classList.remove('on'); } }; })();
+addEventListener('keydown', ev => { const k = ev.key;
+  if ([' ', 'ArrowRight', 'PageDown', 'Enter'].includes(k)) { ev.preventDefault(); go(cur + 1); }
+  else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(k)) { ev.preventDefault(); go(cur - 1); }
+  else if (k === 'Home') go(0); else if (k === 'End') go(FLAT.length - 1);
+  else if ('fF'.includes(k)) document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+  else if ('pP'.includes(k)) ink.set('p'); else if ('hH'.includes(k)) ink.set('h'); else if ('eE'.includes(k)) ink.set('e'); else if ('xX'.includes(k)) ink.clear(); else if (k === 'Escape') ink.off();
+  document.getElementById('hint').style.opacity = 0; });
+window.__deck = { go: n => go(n), get cur() { return cur; }, steps: FLAT.length };
+const start = parseInt(location.hash.slice(1)) - 1;
+document.fonts.ready.then(() => go(!isNaN(start) && start > 0 ? start : 0));
+})();
+</script>
+</body>
+</html>
